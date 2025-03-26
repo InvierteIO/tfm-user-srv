@@ -5,8 +5,12 @@ on:
       - develop
 jobs:
   ci:
-    name: Test - Unit & Integration & SonarCloud Scan & Slack WebHook
+    name: Test - Unit & Integration & CodeQL Analysis & SonarCloud Scan & Slack WebHook
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      actions: read
+      security-events: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -17,6 +21,16 @@ jobs:
           java-version: 21
       - name: Unit & Integration Tests
         run: mvn -B verify # -B: --batch-mode
+      - name: Initialize CodeQL
+        if: success()
+        uses: github/codeql-action/init@v3
+        with:
+          languages: java
+          queries: security-extended
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:java"
       - name: Slack WebHook
         if: failure()
         uses: 8398a7/action-slack@v3
