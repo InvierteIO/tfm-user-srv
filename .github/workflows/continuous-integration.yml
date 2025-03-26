@@ -21,6 +21,9 @@ jobs:
           java-version: 21
       - name: Unit & Integration Tests
         run: mvn -B verify # -B: --batch-mode
+      - name: Build project
+        if: success()
+        run: mvn clean compile
       - name: Initialize CodeQL
         if: success()
         uses: github/codeql-action/init@v3
