@@ -15,6 +15,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -55,7 +56,8 @@ public class Staff extends User {
   @Enumerated(EnumType.STRING)
   private CompanyRole companyRole;
 
-  @OneToMany(mappedBy = "staff", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  @OneToMany(targetEntity = ActivationCode.class, cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  @JoinColumn(name = "staffId", referencedColumnName = "id")
   private List<ActivationCode> activationCodes = new ArrayList<>();
 
   public void setDefaultNoCompany() {

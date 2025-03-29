@@ -21,7 +21,7 @@ class EmailServiceTest {
   private JavaMailSender mailSender;
 
   @Test
-  public void testSendEmail() {
+  void testSendEmail() {
     this.emailService.sendEmail("to", "subject", "body");
     verify(this.mailSender).send(any(SimpleMailMessage.class));
   }

@@ -10,7 +10,7 @@ class BadRequestExceptionTest {
   private BadRequestException badRequestException;
 
   @BeforeEach
-  public void setUp() {
+  void setUp() {
     this.badRequestException = new BadRequestException("detail");
   }
 

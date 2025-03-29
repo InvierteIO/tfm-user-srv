@@ -33,12 +33,12 @@ class OperatorResourceIT extends BaseContainerIntegrationTest {
   private OperatorRepository operatorRepository;
 
   @BeforeAll
-  public static void setup() {
+  static void setup() {
     postgreSQLContainer.start();
   }
 
   @AfterAll
-  public static void clean() {
+  static void clean() {
     postgreSQLContainer.close();
   }
 

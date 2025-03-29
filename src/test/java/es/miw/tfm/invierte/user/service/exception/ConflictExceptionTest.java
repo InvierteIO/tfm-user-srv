@@ -16,12 +16,12 @@ class ConflictExceptionTest {
   private ConflictException conflictException;
 
   @BeforeEach
-  public void setUp() {
+  void setUp() {
     this.conflictException = new ConflictException(DETAIL);
   }
 
   @Test
-  public void testConflictException() {
+  void testConflictException() {
     assertEquals(EXPECTED_MESSAGE, this.conflictException.getMessage());
   }
 

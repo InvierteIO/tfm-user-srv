@@ -14,12 +14,12 @@ class NotFoundExceptionTest {
   private NotFoundException notFoundException;
 
   @BeforeEach
-  public void setUp() {
+  void setUp() {
     notFoundException = new NotFoundException(DETAIL);
   }
 
   @Test
-  public void testNotFoundException() {
+  void testNotFoundException() {
     assertEquals(DESCRIPTION + ". " + DETAIL, notFoundException.getMessage());
   }
 
