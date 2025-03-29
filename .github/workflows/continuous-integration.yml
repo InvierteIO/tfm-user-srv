@@ -45,10 +45,11 @@ jobs:
       - name: Sonar
         if: success() # always() failure() success()
         run: >
-          mvn -B verify -DskipTests sonar:sonar
+          mvn sonar:sonar
           -Dsonar.projectKey=InvierteIO_tfm-user-srv
           -Dsonar.organization=invierteio
           -Dsonar.host.url=https://sonarcloud.io
+          -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
           -Dsonar.token=$SONAR_TOKEN
         env:
           GITHUB_TOKEN: ${{ secrets.GH_REPOS_TOKEN }}
