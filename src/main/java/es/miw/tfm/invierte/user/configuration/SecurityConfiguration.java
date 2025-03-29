@@ -5,6 +5,7 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 
 import es.miw.tfm.invierte.user.data.dao.OperatorRepository;
 import es.miw.tfm.invierte.user.data.dao.StaffRepository;
+import es.miw.tfm.invierte.user.service.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,6 +33,8 @@ public class SecurityConfiguration {
   private final OperatorRepository operatorRepository;
 
   private final StaffRepository staffRepository;
+
+  private final JwtService jwtService;
 
   @Bean
   public UserDetailsService userDetailsService() {
@@ -89,7 +92,7 @@ public class SecurityConfiguration {
 
   @Bean
   public JwtAuthenticationFilter jwtAuthorizationFilter() {
-    return new JwtAuthenticationFilter();
+    return new JwtAuthenticationFilter(jwtService);
   }
 
   @Bean

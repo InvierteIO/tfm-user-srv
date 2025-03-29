@@ -14,12 +14,12 @@ class ForbiddenExceptionTest {
   private ForbiddenException forbiddenException;
 
   @BeforeEach
-  public void setUp() {
+  void setUp() {
     forbiddenException = new ForbiddenException(DETAIL);
   }
 
   @Test
-  public void testForbiddenException() {
+  void testForbiddenException() {
     assertEquals(DESCRIPTION + ". " + DETAIL, forbiddenException.getMessage());
   }
 

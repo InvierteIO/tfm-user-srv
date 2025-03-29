@@ -82,7 +82,6 @@ public class StaffService {
         .findFirst()
         .map(staff -> {
           final var newActivationCode = generateActivationCode();
-          newActivationCode.setStaff(staff);
           staff.getActivationCodes().add(newActivationCode);
           this.staffRepository.save(staff);
           return newActivationCode;
@@ -115,10 +114,10 @@ public class StaffService {
   private Optional<Staff> findStaffByActivationCode(String activationCode) {
     return this.staffRepository.findAll()
         .stream()
-        .flatMap(staff -> staff.getActivationCodes().stream())
-        .filter(code -> code.getCode().equals(activationCode)
-            && code.getExpirationDate().isAfter(LocalDateTime.now()))
-        .map(ActivationCode::getStaff)
+        .filter(staff -> staff.getActivationCodes()
+            .stream()
+            .anyMatch(code -> code.getCode().equals(activationCode)
+                && code.getExpirationDate().isAfter(LocalDateTime.now())))
         .findFirst();
   }
 

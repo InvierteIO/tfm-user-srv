@@ -131,7 +131,6 @@ class StaffServiceTest {
     ActivationCode activationCode = new ActivationCode();
     activationCode.setCode(UUID.randomUUID().toString());
     activationCode.setExpirationDate(LocalDateTime.now().plusMinutes(30));
-    activationCode.setStaff(mockedInactiveStaff);
     mockedInactiveStaff.getActivationCodes().add(activationCode);
 
     when(this.staffRepository.findAll()).thenReturn(List.of(mockedInactiveStaff));

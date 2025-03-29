@@ -41,12 +41,12 @@ class StaffResourceIT extends BaseContainerIntegrationTest {
   private StaffRepository staffRepository;
 
   @BeforeAll
-  public static void setup() {
+  static void setup() {
     postgreSQLContainer.start();
   }
 
   @AfterAll
-  public static void clean() {
+  static void clean() {
     postgreSQLContainer.close();
   }
 
@@ -85,7 +85,6 @@ class StaffResourceIT extends BaseContainerIntegrationTest {
     ActivationCode activationCode = new ActivationCode();
     activationCode.setExpirationDate(LocalDateTime.now().plusMinutes(30));
     activationCode.setCode(ACTIVATION_CODE);
-    activationCode.setStaff(staff);
     staff.getActivationCodes().add(activationCode);
 
     return staff;

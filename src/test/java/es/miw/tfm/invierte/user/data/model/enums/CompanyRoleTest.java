@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 class CompanyRoleTest {
 
   @Test
-  public void testOf() {
+  void testOf() {
     CompanyRole companyRole = CompanyRole.of("ROLE_OWNER");
     assertEquals(CompanyRole.OWNER, companyRole);
   }
