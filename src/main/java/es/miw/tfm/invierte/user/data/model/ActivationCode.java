@@ -2,39 +2,36 @@ package es.miw.tfm.invierte.user.data.model;
 
 import java.time.LocalDateTime;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Inheritance;
-import jakarta.persistence.InheritanceType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@Builder
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Inheritance(strategy = InheritanceType.JOINED)
-@Table(name = "user_profile")
-public class User {
+@Table(name = "activation_code")
+public class ActivationCode {
+
+  String code;
+
+  LocalDateTime expirationDate;
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private int id;
 
-  private String firstName;
-
-  private String familyName;
-
-  @Column(unique = true, nullable = false)
-  private String email;
-
-  private String password;
-
-  private LocalDateTime registrationDate;
+  @ManyToOne
+  @JoinColumn(name = "staff_id", referencedColumnName = "id")
+  private Staff staff;
 
 }
