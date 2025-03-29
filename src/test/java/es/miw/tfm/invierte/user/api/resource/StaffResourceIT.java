@@ -26,7 +26,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 
 @ApiTestConfig
 @DirtiesContext
-public class StaffResourceIT extends BaseContainerIntegrationTest {
+class StaffResourceIT extends BaseContainerIntegrationTest {
 
   private static final String PASSWORD = "tempassword";
 
@@ -50,14 +50,14 @@ public class StaffResourceIT extends BaseContainerIntegrationTest {
     postgreSQLContainer.close();
   }
 
-  public static Staff createRandomInactiveStaff() {
+  public static Staff createRandomStaff(Status status) {
     Staff staff = new Staff();
     staff.setFirstName("Temp");
     staff.setFamilyName("Temp1");
     staff.setEmail("temp@email.com");
     staff.setPassword(new BCryptPasswordEncoder().encode(PASSWORD));
     staff.setCompanyRole(CompanyRole.OWNER);
-    staff.setStatus(Status.INACTIVE);
+    staff.setStatus(status);
     return staff;
   }
 
@@ -130,7 +130,7 @@ public class StaffResourceIT extends BaseContainerIntegrationTest {
 
   @Test
   void testSetCompanyToUser() {
-    final var mockedEntity = createRandomInactiveStaff();
+    final var mockedEntity = createRandomStaff(Status.INACTIVE);
     this.staffRepository.save(mockedEntity);
     final var staffCompanyDto = new StaffCompanyDto("12345678A");
     webTestClient.patch().uri(StaffResource.USERS + StaffResource.STAFF + "/" + mockedEntity.getEmail() + StaffResource.SET_COMPANY)
@@ -143,7 +143,7 @@ public class StaffResourceIT extends BaseContainerIntegrationTest {
 
   @Test
   void testNotify() {
-    final var mockedEntity = createRandomInactiveStaff();
+    final var mockedEntity = createRandomStaff(Status.INACTIVE);
     this.staffRepository.save(mockedEntity);
     webTestClient.post().uri(
             StaffResource.USERS + StaffResource.STAFF + "/" + mockedEntity.getEmail() + StaffResource.COMPANY + "/12345678A"

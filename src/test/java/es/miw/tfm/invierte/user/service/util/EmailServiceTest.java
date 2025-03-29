@@ -12,7 +12,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 
 @ExtendWith({MockitoExtension.class})
-public class EmailServiceTest {
+class EmailServiceTest {
 
   @InjectMocks
   private EmailService emailService;

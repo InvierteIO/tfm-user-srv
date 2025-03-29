@@ -23,7 +23,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith({MockitoExtension.class})
-public class OperatorServiceTest {
+class OperatorServiceTest {
 
   private static final String TOKEN = "token";
 

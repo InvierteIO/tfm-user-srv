@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class NotFoundExceptionTest {
+class NotFoundExceptionTest {
 
   private static final String DESCRIPTION = "Not Found Exception";
 
