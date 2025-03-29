@@ -22,7 +22,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 
 @ApiTestConfig
 @DirtiesContext
-public class OperatorResourceIT extends BaseContainerIntegrationTest {
+class OperatorResourceIT extends BaseContainerIntegrationTest {
 
   private static final String PASSWORD = "tempassword";
 

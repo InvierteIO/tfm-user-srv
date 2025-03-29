@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.resource.NoResourceFoundException;
 
-public class ApiExceptionHandlerTest {
+class ApiExceptionHandlerTest {
 
   private ApiExceptionHandler apiExceptionHandler;
 

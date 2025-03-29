@@ -122,15 +122,6 @@ public class StaffService {
         .findFirst();
   }
 
-  private void assertNotExistByEmailAndTaxIdentifier(String email, String taxIdentifierNumber) {
-    this.staffRepository.findByEmailAndTaxIdentifierNumber(email, taxIdentifierNumber)
-        .stream()
-        .findFirst()
-        .ifPresent(staff -> {
-          throw new ConflictException("The email and tax identifier number already exists: " + email + " - " + taxIdentifierNumber);
-        });
-  }
-
   private void assertStaffUserIsInactive(String email, String taxIdentifierNumber) {
     this.staffRepository.findByEmailAndTaxIdentifierNumber(email, taxIdentifierNumber)
         .stream()

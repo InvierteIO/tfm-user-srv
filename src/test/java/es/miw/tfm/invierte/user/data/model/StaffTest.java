@@ -7,7 +7,7 @@ import es.miw.tfm.invierte.user.data.model.enums.CompanyRole;
 import es.miw.tfm.invierte.user.data.model.enums.Status;
 import org.junit.jupiter.api.Test;
 
-public class StaffTest {
+class StaffTest {
 
   private final Staff staff = new Staff();
 

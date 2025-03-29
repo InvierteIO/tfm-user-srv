@@ -2,6 +2,7 @@ package es.miw.tfm.invierte.user.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -29,7 +30,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith({MockitoExtension.class})
-public class StaffServiceTest {
+class StaffServiceTest {
 
   private static final String TOKEN = "token";
 
@@ -121,6 +122,7 @@ public class StaffServiceTest {
     when(this.staffRepository.save(any(Staff.class))).thenReturn(staff);
     Optional<String> message = staffService.getActivationCodeMessage(EMAIL, "123456");
     verify(this.staffRepository).save(any(Staff.class));
+    assertTrue(message.isPresent());
   }
 
   @Test
