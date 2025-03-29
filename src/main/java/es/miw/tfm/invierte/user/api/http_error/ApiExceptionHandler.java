@@ -4,7 +4,6 @@ import es.miw.tfm.invierte.user.service.exception.BadRequestException;
 import es.miw.tfm.invierte.user.service.exception.ConflictException;
 import es.miw.tfm.invierte.user.service.exception.ForbiddenException;
 import es.miw.tfm.invierte.user.service.exception.NotFoundException;
-import org.apache.logging.log4j.LogManager;
 import org.springframework.beans.FatalBeanException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;

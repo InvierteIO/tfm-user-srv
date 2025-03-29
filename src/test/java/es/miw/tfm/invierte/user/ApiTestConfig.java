@@ -1,4 +1,4 @@
-package es.miw.tfm.invierte.user.resource;
+package es.miw.tfm.invierte.user;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -10,15 +10,14 @@ import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWeb
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 
-@Testcontainers
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient
 @TestPropertySource(locations = "classpath:test.properties")
 public @interface ApiTestConfig {
+
 }

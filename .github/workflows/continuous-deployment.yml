@@ -1,7 +1,7 @@
 name: CD
 on:
   push:
-    branches: [main]
+    branches: [ main ]
 env:
   REPOSITORY: ${{ github.repository }}  # El mismo para GitHub & AWS ECR
   GHCR_URL: ghcr.io # GitHub Container Registry

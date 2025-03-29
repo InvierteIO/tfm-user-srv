@@ -17,4 +17,5 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @SpringBootTest
 @TestPropertySource(locations = "classpath:test.properties")
 public @interface TestConfig {
+
 }
