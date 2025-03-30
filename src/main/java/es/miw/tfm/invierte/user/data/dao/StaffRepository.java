@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface StaffRepository extends JpaRepository<Staff, Integer> {
 
-  List<Staff> findByEmailAndTaxIdentifierNumber(String email, String taxIdentifierNumber);
+  List<Staff> findByEmailAndTaxIdentificationNumber(String email, String taxIdentificationNumber);
 
   List<Staff> findByEmailAndStatus(String email, Status status);
 

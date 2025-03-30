@@ -17,6 +17,6 @@ public class StaffCompanyDto {
 
   @NotBlank
   @NotNull
-  private String taxIdentifierNumber;
+  private String taxIdentificationNumber;
 
 }

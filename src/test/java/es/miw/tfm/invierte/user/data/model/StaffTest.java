@@ -16,6 +16,6 @@ class StaffTest {
     this.staff.setDefaultNoCompany();
     assertEquals(Status.INACTIVE, staff.getStatus());
     assertEquals(CompanyRole.OWNER, staff.getCompanyRole());
-    assertNull(staff.getTaxIdentifierNumber());
+    assertNull(staff.getTaxIdentificationNumber());
   }
 }

@@ -51,7 +51,7 @@ public class Staff extends User {
   @Enumerated(EnumType.STRING)
   private Status status;
 
-  private String taxIdentifierNumber;
+  private String taxIdentificationNumber;
 
   @Enumerated(EnumType.STRING)
   private CompanyRole companyRole;
@@ -63,7 +63,7 @@ public class Staff extends User {
   public void setDefaultNoCompany() {
     this.status = Status.INACTIVE;
     this.companyRole = CompanyRole.OWNER;
-    this.taxIdentifierNumber = null;
+    this.taxIdentificationNumber = null;
   }
 
 }

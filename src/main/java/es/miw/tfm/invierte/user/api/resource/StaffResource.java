@@ -36,7 +36,7 @@ public class StaffResource {
 
   public static final String COMPANY = "/companies";
 
-  public static final String TAX_IDENTIFIER_NUMBER = "/{taxIdentifierNumber}";
+  public static final String TAX_IDENTIFICATION_NUMBER = "/{taxIdentificationNumber}";
 
   public static final String EMAIL = "/{email}";
 
@@ -69,16 +69,16 @@ public class StaffResource {
   @PatchMapping(STAFF + EMAIL + SET_COMPANY)
   @PreAuthorize("permitAll()")
   public void setCompanyToUser(@Valid @RequestBody StaffCompanyDto staffCompanyDto, @PathVariable String email) {
-    this.staffService.setCompanyToUser(email, staffCompanyDto.getTaxIdentifierNumber());
-    log.info("Company {} set to staff user {}", staffCompanyDto.getTaxIdentifierNumber(), email);
+    this.staffService.setCompanyToUser(email, staffCompanyDto.getTaxIdentificationNumber());
+    log.info("Company {} set to staff user {}", staffCompanyDto.getTaxIdentificationNumber(), email);
   }
 
-  @PostMapping(STAFF + EMAIL + COMPANY + TAX_IDENTIFIER_NUMBER + NOTIFY_CODE)
+  @PostMapping(STAFF + EMAIL + COMPANY + TAX_IDENTIFICATION_NUMBER + NOTIFY_CODE)
   @PreAuthorize("permitAll()")
-  public void notify(@PathVariable String email, @PathVariable String taxIdentifierNumber) {
-    this.staffService.getActivationCodeMessage(email, taxIdentifierNumber)
+  public void notify(@PathVariable String email, @PathVariable String taxIdentificationNumber) {
+    this.staffService.getActivationCodeMessage(email, taxIdentificationNumber)
         .ifPresent(message -> this.emailService.sendEmail(email, "Unete a InvierteIO", message));
-    log.info("Activation code - notification sent for  email {} - taxIdentifierNumber {}", email, taxIdentifierNumber);
+    log.info("Activation code - notification sent for  email {} - taxIdentificationNumber {}", email, taxIdentificationNumber);
   }
 
   @PostMapping(STAFF + ACTIVATE_CODE)
