@@ -57,7 +57,7 @@ class StaffServiceTest {
     staff.setEmail(EMAIL);
     staff.setFirstName(NAME);
     staff.setCompanyRole(CompanyRole.AGENT);
-    staff.setTaxIdentifierNumber("123456");
+    staff.setTaxIdentificationNumber("123456");
     staff.setStatus(Status.INACTIVE);
     return staff;
   }
@@ -101,7 +101,7 @@ class StaffServiceTest {
             && newStaff.getFirstName().equals(NAME)
             && newStaff.getStatus().equals(Status.INACTIVE)
             && newStaff.getRegistrationDate() != null
-            && newStaff.getTaxIdentifierNumber() == null
+            && newStaff.getTaxIdentificationNumber() == null
             && newStaff.getCompanyRole().equals(CompanyRole.OWNER)
             && newStaff.getActivationCodes().isEmpty()
     ));
@@ -118,7 +118,7 @@ class StaffServiceTest {
   @Test
   void testGetActivationCodeMessage() {
     final var mockedInactiveStaff = buildInactiveStaff();
-    when(this.staffRepository.findByEmailAndTaxIdentifierNumber(EMAIL, "123456")).thenReturn(List.of(mockedInactiveStaff));
+    when(this.staffRepository.findByEmailAndTaxIdentificationNumber(EMAIL, "123456")).thenReturn(List.of(mockedInactiveStaff));
     when(this.staffRepository.save(any(Staff.class))).thenReturn(staff);
     Optional<String> message = staffService.getActivationCodeMessage(EMAIL, "123456");
     verify(this.staffRepository).save(any(Staff.class));

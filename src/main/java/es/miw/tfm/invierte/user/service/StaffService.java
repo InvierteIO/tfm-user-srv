@@ -49,7 +49,7 @@ public class StaffService {
     final var companyRoles = this.staffRepository.findByEmailAndStatus(email, Status.ACTIVE)
         .stream()
         .collect(Collectors.toMap(
-            Staff::getTaxIdentifierNumber,
+            Staff::getTaxIdentificationNumber,
             staff -> staff.getCompanyRole().name()));
 
     return jwtService.createToken(user.getEmail(), user.getFirstName(), companyRoles);
@@ -62,21 +62,21 @@ public class StaffService {
     this.staffRepository.save(staff);
   }
 
-  public void setCompanyToUser(String email, String taxIdentifierNumber) {
+  public void setCompanyToUser(String email, String taxIdentificationNumber) {
     this.assertUserIsInactiveAndHasNoCompany(email);
     this.staffRepository.findByEmailAndStatus(email, Status.INACTIVE)
         .stream()
-        .filter(staff -> Objects.isNull(staff.getTaxIdentifierNumber()))
+        .filter(staff -> Objects.isNull(staff.getTaxIdentificationNumber()))
         .findFirst()
         .ifPresent(staff -> {
-          staff.setTaxIdentifierNumber(taxIdentifierNumber);
+          staff.setTaxIdentificationNumber(taxIdentificationNumber);
           this.staffRepository.save(staff);
         });
   }
 
-  public Optional<String> getActivationCodeMessage(String email, String taxIdentifierNumber) {
-    this.assertStaffUserIsInactive(email, taxIdentifierNumber);
-    return this.staffRepository.findByEmailAndTaxIdentifierNumber(email, taxIdentifierNumber)
+  public Optional<String> getActivationCodeMessage(String email, String taxIdentificationNumber) {
+    this.assertStaffUserIsInactive(email, taxIdentificationNumber);
+    return this.staffRepository.findByEmailAndTaxIdentificationNumber(email, taxIdentificationNumber)
         .stream()
         .filter(staff -> Status.INACTIVE.equals(staff.getStatus()))
         .findFirst()
@@ -103,7 +103,7 @@ public class StaffService {
   private void assertUserIsInactiveAndHasNoCompany(String email) {
     final var inactiveStaffUser = this.staffRepository.findByEmailAndStatus(email, Status.INACTIVE)
         .stream()
-        .filter(staff -> Objects.isNull(staff.getTaxIdentifierNumber()))
+        .filter(staff -> Objects.isNull(staff.getTaxIdentificationNumber()))
         .findFirst();
 
     if (inactiveStaffUser.isEmpty()) {
@@ -121,13 +121,13 @@ public class StaffService {
         .findFirst();
   }
 
-  private void assertStaffUserIsInactive(String email, String taxIdentifierNumber) {
-    this.staffRepository.findByEmailAndTaxIdentifierNumber(email, taxIdentifierNumber)
+  private void assertStaffUserIsInactive(String email, String taxIdentificationNumber) {
+    this.staffRepository.findByEmailAndTaxIdentificationNumber(email, taxIdentificationNumber)
         .stream()
         .filter(staff -> Status.ACTIVE.equals(staff.getStatus()))
         .findFirst()
         .ifPresent(staff -> {
-          throw new ConflictException("Relationship is not inactive: email " + email + " - taxIdentifierNumber " + taxIdentifierNumber);
+          throw new ConflictException("Relationship is not inactive: email " + email + " - taxIdentificationNumber " + taxIdentificationNumber);
         });
   }
 

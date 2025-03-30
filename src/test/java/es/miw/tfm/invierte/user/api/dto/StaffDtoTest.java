@@ -30,7 +30,7 @@ class StaffDtoTest {
         .address("123 Main St")
         .phone("123456789")
         .gender(Gender.MALE)
-        .taxIdentifierNumber("123456789")
+        .taxIdentificationNumber("123456789")
         .build();
   }
 
@@ -49,6 +49,6 @@ class StaffDtoTest {
     assertEquals("123 Main St", staff.getAddress());
     assertEquals("123456789", staff.getPhone());
     assertEquals(Gender.MALE, staff.getGender());
-    assertEquals("123456789", staff.getTaxIdentifierNumber());
+    assertEquals("123456789", staff.getTaxIdentificationNumber());
   }
 }

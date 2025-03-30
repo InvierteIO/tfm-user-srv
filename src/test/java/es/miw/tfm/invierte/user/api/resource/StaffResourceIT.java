@@ -30,7 +30,7 @@ class StaffResourceIT extends BaseContainerIntegrationTest {
 
   private static final String PASSWORD = "tempassword";
 
-  private static final String TAX_IDENTIFIER_NUMBER = "12345678A";
+  private static final String TAX_IDENTIFICATION_NUMBER = "12345678A";
 
   private static final String ACTIVATION_CODE = "999999999999";
 
@@ -79,7 +79,7 @@ class StaffResourceIT extends BaseContainerIntegrationTest {
     staff.setEmail("temp@email.com");
     staff.setPassword(new BCryptPasswordEncoder().encode(PASSWORD));
     staff.setCompanyRole(CompanyRole.OWNER);
-    staff.setTaxIdentifierNumber(TAX_IDENTIFIER_NUMBER);
+    staff.setTaxIdentificationNumber(TAX_IDENTIFICATION_NUMBER);
     staff.setStatus(Status.INACTIVE);
 
     ActivationCode activationCode = new ActivationCode();

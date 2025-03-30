@@ -50,7 +50,7 @@ public class StaffDto {
 
   private Gender gender;
 
-  private String taxIdentifierNumber;
+  private String taxIdentificationNumber;
 
   public Staff toStaff() {
     Staff staff = new Staff();
