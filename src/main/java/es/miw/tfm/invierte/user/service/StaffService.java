@@ -1,20 +1,24 @@
 package es.miw.tfm.invierte.user.service;
 
-import java.time.LocalDateTime;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
+import es.miw.tfm.invierte.user.api.dto.PasswordChangeDto;
+import es.miw.tfm.invierte.user.api.dto.StaffInfoDto;
 import es.miw.tfm.invierte.user.data.dao.StaffRepository;
 import es.miw.tfm.invierte.user.data.dao.UserRepository;
 import es.miw.tfm.invierte.user.data.model.ActivationCode;
 import es.miw.tfm.invierte.user.data.model.Staff;
 import es.miw.tfm.invierte.user.data.model.enums.Status;
+import es.miw.tfm.invierte.user.service.exception.BadRequestException;
 import es.miw.tfm.invierte.user.service.exception.ConflictException;
 import es.miw.tfm.invierte.user.service.exception.NotFoundException;
+import java.time.LocalDateTime;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -94,6 +98,44 @@ public class StaffService {
         .orElseThrow(() -> new NotFoundException("Activation code not found or expired: " + activationCode));
     staffWithValidActivationCode.setStatus(Status.ACTIVE);
     this.staffRepository.save(staffWithValidActivationCode);
+  }
+
+  public void changePassword(String email, PasswordChangeDto passwordChangeDto) {
+    BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    this.staffRepository.findByEmailAndStatus(email, Status.ACTIVE)
+        .stream()
+        .findFirst()
+        .map(op -> Optional.of(op)
+          .filter(o -> passwordEncoder.matches(passwordChangeDto.getPassword(), o.getPassword()))
+            .map(o -> {
+                o.setPassword(passwordEncoder.encode(passwordChangeDto.getNewPassword()));
+                return this.staffRepository.save(o);
+          })
+          .orElseThrow(() -> new BadRequestException("Passwords do not match with old password")))
+        .map(staffRepository::save)
+        .orElseThrow(() -> new NotFoundException("User not found"));
+  }
+
+  public void updateGeneralInfo(String email, StaffInfoDto staffInfoDto) {
+      this.staffRepository.findByEmailAndStatus(email, Status.ACTIVE)
+        .stream()
+        .findFirst()
+        .map(staff -> {
+            BeanUtils.copyProperties(staffInfoDto, staff);
+           return staff;
+        }).map(staffRepository::save)
+    .orElseThrow(() -> new NotFoundException("Staff not found"));
+  }
+
+  public StaffInfoDto readGeneralInfo(String email) {
+    return this.staffRepository.findByEmailAndStatus(email, Status.ACTIVE)
+      .stream()
+      .findFirst()
+      .map(staff -> {
+          StaffInfoDto staffInfoDto = new StaffInfoDto();
+          BeanUtils.copyProperties(staff, staffInfoDto);
+          return staffInfoDto;
+      }).orElseThrow(() -> new NotFoundException("Staff not found"));
   }
 
   private String getActivationCodeBodyMessage(ActivationCode activationCode) {

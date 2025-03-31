@@ -1,30 +1,30 @@
 package es.miw.tfm.invierte.user.api.resource;
 
+import static es.miw.tfm.invierte.user.util.DummyOperatorUtil.PASSWORD;
+import static es.miw.tfm.invierte.user.util.DummyOperatorUtil.createRandomOperator;
+import static es.miw.tfm.invierte.user.util.DummyOperatorUtil.createRandomOperatorDto;
+import static es.miw.tfm.invierte.user.util.DummyOperatorUtil.createRandomOperatorInfoDto;
+import static es.miw.tfm.invierte.user.util.DummyOperatorUtil.createRandomPasswordChangeDto;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import java.util.Base64;
-
 import es.miw.tfm.invierte.user.ApiTestConfig;
-import es.miw.tfm.invierte.user.BaseContainerIntegrationTest;
-import es.miw.tfm.invierte.user.api.dto.OperatorDto;
+import es.miw.tfm.invierte.user.BaseContainerIntegration;
+import es.miw.tfm.invierte.user.api.dto.OperatorInfoDto;
 import es.miw.tfm.invierte.user.api.dto.TokenDto;
 import es.miw.tfm.invierte.user.data.dao.OperatorRepository;
-import es.miw.tfm.invierte.user.data.model.Operator;
-import es.miw.tfm.invierte.user.data.model.enums.SystemRole;
+import java.util.Base64;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 @ApiTestConfig
 @DirtiesContext
-class OperatorResourceIT extends BaseContainerIntegrationTest {
-
-  private static final String PASSWORD = "tempassword";
+class OperatorResourceIT extends BaseContainerIntegration {
 
   @Autowired
   private WebTestClient webTestClient;
@@ -42,24 +42,59 @@ class OperatorResourceIT extends BaseContainerIntegrationTest {
     postgreSQLContainer.close();
   }
 
-  public static Operator createRandomOperator() {
-    Operator operator = new Operator();
-    operator.setFirstName("Temp");
-    operator.setFamilyName("Temp1");
-    operator.setEmail("temp@email.com");
-    operator.setPassword(new BCryptPasswordEncoder().encode(PASSWORD));
-    operator.setSystemRole(SystemRole.ADMIN);
-    return operator;
+  @Test
+  void testChangePasswordOperator() {
+    final var mockedEntity = createRandomOperator();
+    final var changePasswordDto = createRandomPasswordChangeDto();
+    this.operatorRepository.save(mockedEntity);
+    String basicAuth = "Basic " + Base64.getEncoder().encodeToString((mockedEntity.getEmail() + ":" + PASSWORD).getBytes());
+    String bearer = generateBearerToken(basicAuth);
+    webTestClient.patch().uri(OperatorResource.USERS + OperatorResource.OPERATOR +
+                    "/" + mockedEntity.getEmail()+ OperatorResource.CHANGE_PASSWORD)
+      .header("Authorization", bearer)
+      .contentType(MediaType.APPLICATION_JSON)
+      .bodyValue(changePasswordDto)
+      .exchange()
+      .expectStatus().isOk();
+
+    this.operatorRepository.deleteAll();
   }
 
-  public static OperatorDto createRandomOperatorDto() {
-    return OperatorDto.builder()
-        .firstName("new")
-        .familyName("new")
-        .email("new@email.com")
-        .password("newpass")
-        .systemRole(SystemRole.SUPPORT)
-        .build();
+  @Test
+  void testCreateUserOperator() {
+    final var newMockedOperatorDto = createRandomOperatorDto();
+    final var mockedEntity = createRandomOperator();
+    this.operatorRepository.save(mockedEntity);
+    String basicAuth = "Basic " + Base64.getEncoder().encodeToString((mockedEntity.getEmail() + ":" + PASSWORD).getBytes());
+    String bearer = generateBearerToken(basicAuth);
+    webTestClient.post().uri(OperatorResource.USERS + OperatorResource.OPERATOR)
+            .header("Authorization", bearer)
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(newMockedOperatorDto)
+            .exchange()
+            .expectStatus().isOk();
+
+    this.operatorRepository.deleteAll();
+  }
+
+  @Test
+  void testGetOperatorInfoDto() {
+    final var mockedEntity = createRandomOperator();
+    final var operatorInfoDto = createRandomOperatorInfoDto();
+    this.operatorRepository.save(mockedEntity);
+    String basicAuth = "Basic " + Base64.getEncoder().encodeToString((mockedEntity.getEmail() + ":" + PASSWORD).getBytes());
+    String bearer = generateBearerToken(basicAuth);
+    webTestClient.get().uri(OperatorResource.USERS + OperatorResource.OPERATOR +
+                    "/" + mockedEntity.getEmail()+ OperatorResource.GENERAL_INFO)
+      .header("Authorization", bearer)
+      .exchange()
+      .expectStatus().isOk()
+      .expectBody(OperatorInfoDto.class)
+      .value(operatorInfoDtoResponse -> {
+         assertEquals(operatorInfoDto.getFirstName(),operatorInfoDtoResponse.getFirstName());
+         assertEquals(operatorInfoDto.getFamilyName(),operatorInfoDtoResponse.getFamilyName());
+      });
+    this.operatorRepository.deleteAll();
   }
 
   @Test
@@ -68,40 +103,44 @@ class OperatorResourceIT extends BaseContainerIntegrationTest {
     this.operatorRepository.save(mockedEntity);
     String basicAuth = "Basic " + Base64.getEncoder().encodeToString((mockedEntity.getEmail() + ":" + PASSWORD).getBytes());
     webTestClient.post().uri(OperatorResource.USERS + OperatorResource.OPERATOR + OperatorResource.TOKEN)
-        .header("Authorization", basicAuth)
-        .exchange()
-        .expectStatus().isOk()
-        .expectBody(TokenDto.class)
-        .value(response -> {
-          assertNotNull(response.getToken());
-        });
+      .header("Authorization", basicAuth)
+      .exchange()
+      .expectStatus().isOk()
+      .expectBody(TokenDto.class)
+      .value(response -> {
+        assertNotNull(response.getToken());
+      });
     this.operatorRepository.deleteAll();
   }
 
   @Test
-  void testCreateUserOperator() {
+  void testUpdateGeneralInfo() {
     final var mockedEntity = createRandomOperator();
-    final var newMockedOperatorDto = createRandomOperatorDto();
+    final var operatorInfoDto = createRandomOperatorInfoDto();
     this.operatorRepository.save(mockedEntity);
     String basicAuth = "Basic " + Base64.getEncoder().encodeToString((mockedEntity.getEmail() + ":" + PASSWORD).getBytes());
-    String token = webTestClient.post().uri(OperatorResource.USERS + OperatorResource.OPERATOR + OperatorResource.TOKEN)
-        .header("Authorization", basicAuth)
-        .exchange()
-        .expectBody(TokenDto.class)
-        .returnResult()
-        .getResponseBody()
-        .getToken();
-
-    String bearer = "Bearer " + token;
-
-    webTestClient.post().uri(OperatorResource.USERS + OperatorResource.OPERATOR)
-        .header("Authorization", bearer)
-        .contentType(MediaType.APPLICATION_JSON)
-        .bodyValue(newMockedOperatorDto)
-        .exchange()
-        .expectStatus().isOk();
-
+    String bearer = generateBearerToken(basicAuth);
+    webTestClient.patch().uri(OperatorResource.USERS + OperatorResource.OPERATOR +
+                    "/" + mockedEntity.getEmail()+ OperatorResource.GENERAL_INFO)
+      .header("Authorization", bearer)
+      .contentType(MediaType.APPLICATION_JSON)
+      .bodyValue(operatorInfoDto)
+      .exchange()
+      .expectStatus().isOk();
     this.operatorRepository.deleteAll();
+  }
+
+
+  private String generateBearerToken(String basicAuth) {
+    String token = webTestClient.post().uri(OperatorResource.USERS + OperatorResource.OPERATOR + OperatorResource.TOKEN)
+      .header("Authorization", basicAuth)
+      .exchange()
+      .expectBody(TokenDto.class)
+      .returnResult()
+      .getResponseBody()
+      .getToken();
+
+    return "Bearer " + token;
   }
 
 }
