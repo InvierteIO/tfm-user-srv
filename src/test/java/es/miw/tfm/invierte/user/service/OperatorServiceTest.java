@@ -73,9 +73,10 @@ class OperatorServiceTest {
   @Test
   void testChangePasswordWhenOperatorNotFound() {
     when(operatorRepository.findByEmail(EMAIL)).thenReturn(Optional.empty());
+    var randomPasswordChangeDto = createRandomPasswordChangeDto();
 
-    assertThrows(NotFoundException.class, () ->
-      operatorService.changePassword(EMAIL, createRandomPasswordChangeDto()));
+    assertThrows(NotFoundException.class,
+            () -> operatorService.changePassword(EMAIL, randomPasswordChangeDto));
   }
 
   @Test
@@ -127,9 +128,9 @@ class OperatorServiceTest {
 
   @Test
   void testUpdateGeneralInfoWhenIsOk() {
-    final var operator = createRandomOperatorSupport();
-    when(operatorRepository.findByEmail(EMAIL)).thenReturn(Optional.of(operator));
-    when(operatorRepository.save(operatorCaptor.capture())).thenReturn(operator);
+    final var operatorSupport = createRandomOperatorSupport();
+    when(operatorRepository.findByEmail(EMAIL)).thenReturn(Optional.of(operatorSupport));
+    when(operatorRepository.save(operatorCaptor.capture())).thenReturn(operatorSupport);
     final var operatorInfoDto = createRandomOperatorInfoChanged();
     operatorService.updateGeneralInfo(EMAIL, operatorInfoDto);
     assertEquals(operatorInfoDto.getFirstName(), operatorCaptor.getValue().getFirstName());

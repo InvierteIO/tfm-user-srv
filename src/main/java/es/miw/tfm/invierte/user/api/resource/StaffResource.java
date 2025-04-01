@@ -69,7 +69,8 @@ public class StaffResource {
   public void setCompanyToUser(@Valid @RequestBody StaffCompanyDto staffCompanyDto, @PathVariable String email) {
     this.staffService.setCompanyToUser(email, staffCompanyDto.getTaxIdentificationNumber());
     log.info("Company {} set to staff user {}",
-      staffCompanyDto.getTaxIdentificationNumber().replace("\n", "").replace("\r", ""), email);
+      staffCompanyDto.getTaxIdentificationNumber().replace("\n", "").replace("\r", ""),
+      email.replace("\n", "").replace("\r", ""));
   }
 
   @PostMapping(STAFF + EMAIL + COMPANY + TAX_IDENTIFICATION_NUMBER + NOTIFY_CODE)
@@ -86,7 +87,8 @@ public class StaffResource {
   @PreAuthorize("permitAll()")
   public void activateAccount(@PathVariable String activationCode) {
     this.staffService.activateAccount(activationCode);
-    log.info("Activation code {} completed.", activationCode);
+    log.info("Activation code {} completed.", activationCode
+            .replace("\n", "").replace("\r", ""));
   }
 
   @PatchMapping(STAFF + EMAIL + CHANGE_PASSWORD)

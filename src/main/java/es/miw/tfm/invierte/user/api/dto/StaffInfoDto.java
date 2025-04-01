@@ -1,7 +1,6 @@
 package es.miw.tfm.invierte.user.api.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import es.miw.tfm.invierte.user.data.model.enums.CompanyRole;
 import es.miw.tfm.invierte.user.data.model.enums.Gender;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

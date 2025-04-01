@@ -26,6 +26,8 @@ public class OperatorService {
 
   private final JwtService jwtService;
 
+    public static final String OPERATOR_NOT_FOUND = "Operator not found";
+
   private static List<SystemRole> authorizedRoles(SystemRole systemRole) {
     if (SystemRole.ADMIN.equals(systemRole)) {
       return List.of(SystemRole.ADMIN, SystemRole.SUPPORT);
@@ -47,7 +49,7 @@ public class OperatorService {
              return this.operatorRepository.save(o);
           })
           .orElseThrow(() -> new BadRequestException("Passwords do not match with old password"))
-      ).orElseThrow(() -> new NotFoundException("Operator not found"));
+      ).orElseThrow(() -> new NotFoundException(OPERATOR_NOT_FOUND));
   }
 
   public void createUser(Operator operator, SystemRole systemRole) {
@@ -74,7 +76,7 @@ public class OperatorService {
             return operator;
         })
         .map(operatorRepository::save)
-        .orElseThrow(() -> new NotFoundException("Operator not found"));
+        .orElseThrow(() -> new NotFoundException(OPERATOR_NOT_FOUND));
   }
 
   public OperatorInfoDto readGeneralInfo(String email) {
@@ -84,7 +86,7 @@ public class OperatorService {
               BeanUtils.copyProperties(operator, operatorInfoDto);
               return operatorInfoDto;
           })
-          .orElseThrow(() -> new NotFoundException("Operator not found"));
+          .orElseThrow(() -> new NotFoundException(OPERATOR_NOT_FOUND));
   }
 
   private void assertNoExistByEmail(String email) {
