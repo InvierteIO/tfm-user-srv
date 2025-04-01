@@ -147,13 +147,13 @@ class StaffServiceTest {
 
   @Test
   void testUpdateGeneralInfoWhenIsOk() {
-    var staff = createRandomStaff(Status.ACTIVE);
+    var staffActive = createRandomStaff(Status.ACTIVE);
     when(staffRepository.findByEmailAndStatus(anyString(), isA(Status.class)))
-      .thenReturn(List.of(staff));
-    when(staffRepository.save(staffCaptor.capture())).thenReturn(staff);
+      .thenReturn(List.of(staffActive));
+    when(staffRepository.save(staffCaptor.capture())).thenReturn(staffActive);
     var staffInfoDto = createRandomStaffInfoDto();
     staffService.updateGeneralInfo(EMAIL, staffInfoDto);
-    assertEquals(staff.getFirstName(), staffCaptor.getValue().getFirstName());
+    assertEquals(staffActive.getFirstName(), staffCaptor.getValue().getFirstName());
   }
 
   @Test
@@ -167,11 +167,11 @@ class StaffServiceTest {
 
   @Test
   void testReadGeneralInfoWhenIsOk() {
-    var staff = createRandomStaff(Status.ACTIVE);
+    var staffActive = createRandomStaff(Status.ACTIVE);
     when(staffRepository.findByEmailAndStatus(anyString(), isA(Status.class)))
-      .thenReturn(List.of(staff));
+      .thenReturn(List.of(staffActive));
     var infoDto = staffService.readGeneralInfo(EMAIL);
-    assertEquals(staff.getFirstName(), infoDto.getFirstName());
+    assertEquals(staffActive.getFirstName(), infoDto.getFirstName());
     verify(staffRepository).findByEmailAndStatus(EMAIL, Status.ACTIVE);
   }
 
