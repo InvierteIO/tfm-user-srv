@@ -87,7 +87,11 @@ public class OperatorResource {
   }
 
   private SystemRole extractOperatorRoleClaims() {
-    List<String> roleClaims = SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+    List<String> roleClaims = SecurityContextHolder
+        .getContext()
+        .getAuthentication()
+        .getAuthorities()
+        .stream()
         .map(GrantedAuthority::getAuthority).toList();
     return SystemRole.of(roleClaims.getFirst());
   }

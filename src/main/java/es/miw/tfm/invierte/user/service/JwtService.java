@@ -1,17 +1,23 @@
 package es.miw.tfm.invierte.user.service;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.interfaces.DecodedJWT;
+import es.miw.tfm.invierte.user.configuration.KeyConfiguration;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
+@Slf4j
 public class JwtService {
 
   private static final String BEARER = "Bearer ";
@@ -26,18 +32,19 @@ public class JwtService {
 
   private static final String ROLE_CLAIM = "role";
 
-  private final String secret;
-
   private final String issuer;
 
   private final int expire;
 
+  private final KeyConfiguration keyConfiguration;
+
+
   @Autowired
-  public JwtService(@Value("${tfm.jwt.secret}") String secret, @Value("${tfm.jwt.issuer}") String issuer,
-      @Value("${tfm.jwt.expire}") int expire) {
-    this.secret = secret;
+  public JwtService(@Value("${tfm.jwt.issuer}") String issuer,
+      @Value("${tfm.jwt.expire}") int expire, KeyConfiguration keyConfiguration) {
     this.issuer = issuer;
     this.expire = expire;
+    this.keyConfiguration = keyConfiguration;
   }
 
   public String extractToken(String bearer) {
@@ -49,57 +56,64 @@ public class JwtService {
   }
 
   public String createToken(String user, String name, String role) {
-    return JWT.create()
-        .withIssuer(this.issuer)
-        .withIssuedAt(new Date())
-        .withNotBefore(new Date())
-        .withExpiresAt(new Date(System.currentTimeMillis() + this.expire * 1000L))
-        .withClaim(USER_CLAIM, user)
-        .withClaim(NAME_CLAIM, name)
-        .withClaim(ROLE_CLAIM, role)
-        .sign(Algorithm.HMAC256(this.secret));
+    Map<String, Object> claims = new HashMap<>();
+    claims.put(USER_CLAIM, user);
+    claims.put(NAME_CLAIM, name);
+    claims.put(ROLE_CLAIM, role);
 
+    return this.buildToken(claims);
   }
 
-  public String createToken(String user, String name, Map<String, String> companyRoles) {
-    return JWT.create()
-        .withIssuer(this.issuer)
-        .withIssuedAt(new Date())
-        .withNotBefore(new Date())
-        .withExpiresAt(new Date(System.currentTimeMillis() + this.expire * 1000L))
-        .withClaim(USER_CLAIM, user)
-        .withClaim(NAME_CLAIM, name)
-        .withClaim(COMPANY_ROLE_CLAIM, companyRoles)
-        .sign(Algorithm.HMAC256(this.secret));
+  public String createToken(String user, String name, Map<String, String>  companyRoles) {
+    Map<String, Object> claims = new HashMap<>();
+    claims.put(USER_CLAIM, user);
+    claims.put(NAME_CLAIM, name);
+    claims.put(COMPANY_ROLE_CLAIM, companyRoles);
 
+    return this.buildToken(claims);
+  }
+
+  private String buildToken(Map<String, Object> claims) {
+    return Jwts.builder()
+        .setIssuer(this.issuer)
+        .setIssuedAt(new Date())
+        .setNotBefore(new Date())
+        .setExpiration(new Date(System.currentTimeMillis() + this.expire * 1000L))
+        .setClaims(claims)
+        .signWith(keyConfiguration.getPrivateKey(), SignatureAlgorithm.RS256)
+        .compact();
   }
 
   public String user(String authorization) {
     return this.verify(authorization)
-        .map(jwt -> jwt.getClaim(USER_CLAIM).asString())
+        .map(claims -> (String)claims.get(USER_CLAIM))
         .orElse("");
   }
 
   public String name(String authorization) {
     return this.verify(authorization)
-        .map(jwt -> jwt.getClaim(NAME_CLAIM).asString())
+        .map(claims -> (String)claims.get(NAME_CLAIM))
         .orElse("");
   }
 
   public String role(String authorization) {
     return this.verify(authorization)
-        .map(jwt -> jwt.getClaim(ROLE_CLAIM).asString())
+        .map(claims -> (String)claims.get(ROLE_CLAIM))
         .orElse("");
   }
 
-  private Optional<DecodedJWT> verify(String token) {
+  public Optional<Claims> verify(String token) {
     try {
-      return Optional.of(JWT.require(Algorithm.HMAC256(this.secret))
-          .withIssuer(this.issuer).build()
-          .verify(token));
-    } catch (Exception exception) {
-      return Optional.empty();
+      final var claims = Jwts.parserBuilder()
+          .setSigningKey(keyConfiguration.getPublicKey())
+          .build()
+          .parseClaimsJws(token)
+          .getBody();
+      return Optional.of(claims);
+    } catch (JwtException e) {
+      log.error("Failed to verify JWT token",e);
     }
+    return Optional.empty();
   }
 
 }
