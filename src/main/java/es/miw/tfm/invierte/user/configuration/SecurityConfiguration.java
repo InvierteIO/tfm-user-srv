@@ -24,6 +24,26 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+/**
+ * Configuration class for Spring Security.
+ * This class sets up the security configuration for the application, including
+ * authentication, password encoding, and JWT-based authorization.
+ *
+ * <p>Utilizes Spring Security's configuration capabilities to define security filters,
+ * authentication providers, and session management policies.
+ *
+ * @see org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
+ * @see org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
+ * @see org.springframework.security.web.SecurityFilterChain
+ * @see org.springframework.security.authentication.AuthenticationManager
+ * @see org.springframework.security.crypto.password.PasswordEncoder
+ * @see JwtAuthenticationFilter
+ * @see JwtService
+ * @see OperatorRepository
+ * @see StaffRepository
+ *
+ * @author denilssonmn
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -36,6 +56,13 @@ public class SecurityConfiguration {
 
   private final JwtService jwtService;
 
+  /**
+   * Provides a custom `UserDetailsService` implementation.
+   * Retrieves user details from either the `OperatorRepository` or `StaffRepository`
+   * based on the provided email.
+   *
+   * @return a `UserDetailsService` implementation
+   */
   @Bean
   public UserDetailsService userDetailsService() {
     return email -> {
@@ -65,6 +92,15 @@ public class SecurityConfiguration {
     };
   }
 
+  /**
+   * Configures the security filter chain for the application.
+   * Disables CSRF, enables HTTP Basic authentication, sets session management to stateless,
+   * and adds a JWT authorization filter.
+   *
+   * @param http the `HttpSecurity` object to configure
+   * @return the configured `SecurityFilterChain`
+   * @throws Exception if an error occurs during configuration
+   */
   @Bean
   @SuppressWarnings("java:S4502")
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -78,6 +114,13 @@ public class SecurityConfiguration {
     return http.build();
   }
 
+  /**
+   * Configures the authentication provider for the application.
+   * Uses a `DaoAuthenticationProvider` with a custom `UserDetailsService` and
+   * a password encoder.
+   *
+   * @return the configured `AuthenticationProvider`
+   */
   public AuthenticationProvider authenticationProvider() {
     DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
     authProvider.setUserDetailsService(userDetailsService());
@@ -85,17 +128,37 @@ public class SecurityConfiguration {
     return authProvider;
   }
 
+  /**
+   * Provides the `AuthenticationManager` bean.
+   * Retrieves the `AuthenticationManager` from the `AuthenticationConfiguration`.
+   *
+   * @param config the `AuthenticationConfiguration` object
+   * @return the `AuthenticationManager`
+   * @throws Exception if an error occurs during retrieval
+   */
   @Bean
   public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
       throws Exception {
     return config.getAuthenticationManager();
   }
 
+  /**
+   * Provides the JWT authorization filter bean.
+   * Configures the `JwtAuthenticationFilter` with the `JwtService`.
+   *
+   * @return the `JwtAuthenticationFilter`
+   */
   @Bean
   public JwtAuthenticationFilter jwtAuthorizationFilter() {
     return new JwtAuthenticationFilter(jwtService);
   }
 
+  /**
+   * Provides the password encoder bean.
+   * Uses the `BCryptPasswordEncoder` for encoding passwords.
+   *
+   * @return the `PasswordEncoder`
+   */
   @Bean
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();

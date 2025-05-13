@@ -8,6 +8,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Data Transfer Object (DTO) for Operator Information.
+ * This class is used to transfer operator-related information between different
+ * layers of the application.
+ *
+ * @author denilssonmn
+ * @author dev_castle
+ */
 @Data
 @NoArgsConstructor
 @Builder

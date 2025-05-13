@@ -8,16 +8,24 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Data Transfer Object (DTO) for Password Change.
+ * This class is used to transfer password change data between different layers of the application.
+ *
+ * @author denilssonmn
+ * @author dev_castle
+ */
 @Data
 @NoArgsConstructor
 @Builder
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PasswordChangeDto {
-    @NotBlank
-    @NotNull
-    private String password;
-    @NotBlank
-    @NotNull
-    private String newPassword;
+  @NotBlank
+  @NotNull
+  private String password;
+
+  @NotBlank
+  @NotNull
+  private String newPassword;
 }

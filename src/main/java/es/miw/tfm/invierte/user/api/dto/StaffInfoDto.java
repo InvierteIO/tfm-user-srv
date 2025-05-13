@@ -10,31 +10,38 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Data Transfer Object (DTO) for Staff Information.
+ * This class is used to transfer staff-related data between
+ * different layers of the application.
+ * It includes fields for personal and job-related information.
+ *
+ * @author denilssonmn
+ */
 @Data
 @NoArgsConstructor
 @Builder
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class StaffInfoDto {
+  @NotNull
+  @NotBlank
+  private String firstName;
 
-    @NotNull
-    @NotBlank
-    private String firstName;
+  @NotNull
+  @NotBlank
+  private String familyName;
 
-    @NotNull
-    @NotBlank
-    private String familyName;
+  private LocalDate birthDate;
 
-    private LocalDate birthDate;
+  private String identityDocument;
 
-    private String identityDocument;
+  private String jobTitle;
 
-    private String jobTitle;
+  private String address;
 
-    private String address;
+  private String phone;
 
-    private String phone;
-
-    private Gender gender;
+  private Gender gender;
 
 }
