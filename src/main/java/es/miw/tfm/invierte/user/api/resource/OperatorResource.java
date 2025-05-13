@@ -1,5 +1,9 @@
 package es.miw.tfm.invierte.user.api.resource;
 
+import java.util.Collection;
+import java.util.Objects;
+import java.util.stream.Stream;
+
 import es.miw.tfm.invierte.user.api.dto.OperatorDto;
 import es.miw.tfm.invierte.user.api.dto.OperatorInfoDto;
 import es.miw.tfm.invierte.user.api.dto.PasswordChangeDto;
@@ -8,7 +12,6 @@ import es.miw.tfm.invierte.user.data.model.enums.SystemRole;
 import es.miw.tfm.invierte.user.service.OperatorService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,8 +20,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -87,9 +90,13 @@ public class OperatorResource {
   }
 
   private SystemRole extractOperatorRoleClaims() {
-    List<String> roleClaims = SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
-        .map(GrantedAuthority::getAuthority).toList();
-    return SystemRole.of(roleClaims.getFirst());
+    return Stream.ofNullable(SecurityContextHolder.getContext().getAuthentication().getAuthorities())
+        .filter(Objects::nonNull)
+        .flatMap(Collection::stream)
+        .map(GrantedAuthority::getAuthority)
+        .map(SystemRole::of)
+        .findFirst()
+        .orElse(null);
   }
 
 }

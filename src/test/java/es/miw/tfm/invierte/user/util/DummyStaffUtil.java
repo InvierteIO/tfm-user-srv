@@ -1,15 +1,16 @@
 package es.miw.tfm.invierte.user.util;
 
+import java.time.LocalDateTime;
+
 import es.miw.tfm.invierte.user.api.dto.PasswordChangeDto;
 import es.miw.tfm.invierte.user.api.dto.StaffDto;
 import es.miw.tfm.invierte.user.api.dto.StaffInfoDto;
 import es.miw.tfm.invierte.user.data.model.ActivationCode;
 import es.miw.tfm.invierte.user.data.model.Staff;
 import es.miw.tfm.invierte.user.data.model.enums.CompanyRole;
+import es.miw.tfm.invierte.user.data.model.enums.Gender;
 import es.miw.tfm.invierte.user.data.model.enums.Status;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-
-import java.time.LocalDateTime;
 
 public class DummyStaffUtil {
     public static final String TOKEN = "token";
@@ -68,6 +69,7 @@ public class DummyStaffUtil {
         StaffInfoDto staff = new StaffInfoDto();
         staff.setFirstName(NAME);
         staff.setFamilyName("Temp1");
+        staff.setGender(Gender.MALE);
         return staff;
     }
 
@@ -98,12 +100,41 @@ public class DummyStaffUtil {
         return staff;
     }
 
+    public static Staff buildActiveStaff() {
+        Staff staff = new Staff();
+        staff.setEmail(EMAIL);
+        staff.setFirstName(NAME);
+        staff.setCompanyRole(CompanyRole.AGENT);
+        staff.setTaxIdentificationNumber("123456");
+        staff.setStatus(Status.ACTIVE);
+        return staff;
+    }
+
     public static Staff buildInactiveStaffWithNoCompany() {
         Staff staff = new Staff();
         staff.setEmail(EMAIL);
         staff.setFirstName(NAME);
         staff.setCompanyRole(CompanyRole.AGENT);
         staff.setStatus(Status.INACTIVE);
+        return staff;
+    }
+
+    public static Staff buildActiveStaffWithNoCompany() {
+        Staff staff = new Staff();
+        staff.setEmail(EMAIL);
+        staff.setFirstName(NAME);
+        staff.setCompanyRole(CompanyRole.AGENT);
+        staff.setStatus(Status.ACTIVE);
+        return staff;
+    }
+
+    public static Staff buildInactiveStaffWithCompany() {
+        Staff staff = new Staff();
+        staff.setEmail(EMAIL);
+        staff.setFirstName(NAME);
+        staff.setCompanyRole(CompanyRole.AGENT);
+        staff.setStatus(Status.INACTIVE);
+        staff.setTaxIdentificationNumber(TAX_IDENTIFICATION_NUMBER);
         return staff;
     }
 }

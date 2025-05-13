@@ -8,14 +8,16 @@ import static es.miw.tfm.invierte.user.util.DummyOperatorUtil.createRandomPasswo
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import java.util.Base64;
+
 import es.miw.tfm.invierte.user.ApiTestConfig;
 import es.miw.tfm.invierte.user.BaseContainerIntegration;
 import es.miw.tfm.invierte.user.api.dto.OperatorInfoDto;
 import es.miw.tfm.invierte.user.api.dto.TokenDto;
 import es.miw.tfm.invierte.user.data.dao.OperatorRepository;
-import java.util.Base64;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -24,6 +26,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 
 @ApiTestConfig
 @DirtiesContext
+@Tag("IntegrationTest")
 class OperatorResourceIT extends BaseContainerIntegration {
 
   @Autowired

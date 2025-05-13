@@ -1,18 +1,21 @@
 package es.miw.tfm.invierte.user.service;
 
 import static es.miw.tfm.invierte.user.util.DummyOperatorUtil.EMAIL;
-import static es.miw.tfm.invierte.user.util.DummyOperatorUtil.createRandomOperatorInfoDto;
 import static es.miw.tfm.invierte.user.util.DummyOperatorUtil.createRandomOperatorInfoChanged;
+import static es.miw.tfm.invierte.user.util.DummyOperatorUtil.createRandomOperatorInfoDto;
 import static es.miw.tfm.invierte.user.util.DummyOperatorUtil.createRandomOperatorSupport;
 import static es.miw.tfm.invierte.user.util.DummyOperatorUtil.createRandomPasswordChangeDto;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.util.Objects;
+import java.util.Optional;
 
 import es.miw.tfm.invierte.user.api.dto.PasswordChangeDto;
 import es.miw.tfm.invierte.user.data.dao.OperatorRepository;
@@ -22,7 +25,6 @@ import es.miw.tfm.invierte.user.service.exception.BadRequestException;
 import es.miw.tfm.invierte.user.service.exception.ConflictException;
 import es.miw.tfm.invierte.user.service.exception.ForbiddenException;
 import es.miw.tfm.invierte.user.service.exception.NotFoundException;
-import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -67,7 +69,11 @@ class OperatorServiceTest {
     operatorChangePass.setPassword(new BCryptPasswordEncoder()
       .encode(passwordChangeDto.getNewPassword()));
     when(operatorRepository.save(isA(Operator.class))).thenReturn(operatorChangePass);
+
     assertDoesNotThrow(() -> operatorService.changePassword(EMAIL, passwordChangeDto));
+
+    verify(operatorRepository).save(argThat(operatorSave ->
+        !operatorSave.getPassword().equals(passwordChangeDto.getPassword())));
   }
 
   @Test
@@ -102,11 +108,21 @@ class OperatorServiceTest {
   }
 
   @Test
-  void testCreateUserSuccess() {
+  void testCreateUserAdminSuccess() {
     when(operatorRepository.findByEmail(EMAIL)).thenReturn(Optional.empty());
     operatorService.createUser(operator, SystemRole.ADMIN);
-    verify(operatorRepository).save(any(Operator.class));
+    verify(this.operatorRepository)
+        .save(argThat(operator -> !Objects.isNull(operator.getRegistrationDate())));
   }
+
+  @Test
+  void testCreateUserSupportSuccess() {
+    when(operatorRepository.findByEmail(EMAIL)).thenReturn(Optional.empty());
+    operatorService.createUser(operator, SystemRole.SUPPORT);
+    verify(this.operatorRepository)
+        .save(argThat(operator -> !Objects.isNull(operator.getRegistrationDate())));
+  }
+
 
   @Test
   void testLoginNotFound() {
