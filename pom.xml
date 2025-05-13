@@ -65,6 +65,50 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.pitest</groupId>
+        <artifactId>pitest-maven</artifactId>
+        <version>1.16.2</version>
+        <dependencies>
+          <dependency>
+            <groupId>org.pitest</groupId>
+            <artifactId>pitest-junit5-plugin</artifactId>
+            <version>1.2.1</version>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <outputFormats>
+            <outputFormat>XML</outputFormat>
+            <outputFormat>HTML</outputFormat> <!--OPTIONAL -->
+            <outputFormat>CSV</outputFormat>  <!--OPTIONAL -->
+          </outputFormats>
+          <exportLineCoverage>true</exportLineCoverage>
+          <failWhenNoMutations>false</failWhenNoMutations>
+          <timestampedReports>false</timestampedReports>
+          <mutationThreshold>85</mutationThreshold>
+          <failWhenNoMutations>true</failWhenNoMutations>
+          <targetClasses>
+            <param>es.miw.tfm.invierte.user.*</param>
+          </targetClasses>
+          <targetTests>
+            <param>es.miw.tfm.invierte.user.*</param>
+          </targetTests>
+          <excludedGroups>IntegrationTest</excludedGroups>
+          <excludedClasses>
+            <param>**.*DTO</param>
+            <param>**.*DTO$*</param> <!--needed if inner class -->
+            <param>**.*dto</param>
+            <param>**.*Dto</param>
+            <param>**.*VO</param>
+            <param>**.*vo</param>
+            <param>**.*Vo</param>
+            <param>**.dto.*</param>
+            <param>**.configuration.*</param>
+            <param>**.enums.*</param>
+          </excludedClasses>
+          <verbose>false</verbose> <!--OPTIONAL -->
+        </configuration>
+      </plugin>
     </plugins>
   </build>
   <dependencies>
@@ -132,6 +176,12 @@
     <dependency>
       <artifactId>spring-boot-starter-mail</artifactId>
       <groupId>org.springframework.boot</groupId>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-inline</artifactId>
+      <version>4.5.1</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
   <description>Service to handle user related actions</description>

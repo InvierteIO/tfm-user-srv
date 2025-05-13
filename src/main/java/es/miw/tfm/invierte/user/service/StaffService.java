@@ -1,5 +1,11 @@
 package es.miw.tfm.invierte.user.service;
 
+import java.time.LocalDateTime;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
 import es.miw.tfm.invierte.user.api.dto.PasswordChangeDto;
 import es.miw.tfm.invierte.user.api.dto.StaffInfoDto;
 import es.miw.tfm.invierte.user.data.dao.StaffRepository;
@@ -10,11 +16,6 @@ import es.miw.tfm.invierte.user.data.model.enums.Status;
 import es.miw.tfm.invierte.user.service.exception.BadRequestException;
 import es.miw.tfm.invierte.user.service.exception.ConflictException;
 import es.miw.tfm.invierte.user.service.exception.NotFoundException;
-import java.time.LocalDateTime;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -69,9 +70,6 @@ public class StaffService {
   public void setCompanyToUser(String email, String taxIdentificationNumber) {
     this.assertUserIsInactiveAndHasNoCompany(email);
     this.staffRepository.findByEmailAndStatus(email, Status.INACTIVE)
-        .stream()
-        .filter(staff -> Objects.isNull(staff.getTaxIdentificationNumber()))
-        .findFirst()
         .ifPresent(staff -> {
           staff.setTaxIdentificationNumber(taxIdentificationNumber);
           this.staffRepository.save(staff);
@@ -81,9 +79,6 @@ public class StaffService {
   public Optional<String> getActivationCodeMessage(String email, String taxIdentificationNumber) {
     this.assertStaffUserIsInactive(email, taxIdentificationNumber);
     return this.staffRepository.findByEmailAndTaxIdentificationNumber(email, taxIdentificationNumber)
-        .stream()
-        .filter(staff -> Status.INACTIVE.equals(staff.getStatus()))
-        .findFirst()
         .map(staff -> {
           final var newActivationCode = generateActivationCode();
           staff.getActivationCodes().add(newActivationCode);
@@ -103,23 +98,20 @@ public class StaffService {
   public void changePassword(String email, PasswordChangeDto passwordChangeDto) {
     BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     this.staffRepository.findByEmailAndStatus(email, Status.ACTIVE)
-        .stream()
-        .findFirst()
         .map(op -> Optional.of(op)
           .filter(o -> passwordEncoder.matches(passwordChangeDto.getPassword(), o.getPassword()))
-            .map(o -> {
-                o.setPassword(passwordEncoder.encode(passwordChangeDto.getNewPassword()));
-                return this.staffRepository.save(o);
+          .map(staffUpdated -> {
+            staffUpdated.setPassword(passwordEncoder.encode(passwordChangeDto.getNewPassword()));
+            return staffUpdated;
           })
-          .orElseThrow(() -> new BadRequestException("Passwords do not match with old password")))
+          .orElseThrow(() -> new BadRequestException("Passwords do not match with old password"))
+        )
         .map(staffRepository::save)
         .orElseThrow(() -> new NotFoundException("User not found"));
   }
 
   public void updateGeneralInfo(String email, StaffInfoDto staffInfoDto) {
       this.staffRepository.findByEmailAndStatus(email, Status.ACTIVE)
-        .stream()
-        .findFirst()
         .map(staff -> {
             BeanUtils.copyProperties(staffInfoDto, staff);
            return staff;
@@ -129,8 +121,6 @@ public class StaffService {
 
   public StaffInfoDto readGeneralInfo(String email) {
     return this.staffRepository.findByEmailAndStatus(email, Status.ACTIVE)
-      .stream()
-      .findFirst()
       .map(staff -> {
           StaffInfoDto staffInfoDto = new StaffInfoDto();
           BeanUtils.copyProperties(staff, staffInfoDto);
@@ -144,9 +134,7 @@ public class StaffService {
 
   private void assertUserIsInactiveAndHasNoCompany(String email) {
     final var inactiveStaffUser = this.staffRepository.findByEmailAndStatus(email, Status.INACTIVE)
-        .stream()
-        .filter(staff -> Objects.isNull(staff.getTaxIdentificationNumber()))
-        .findFirst();
+        .filter(staff -> Objects.isNull(staff.getTaxIdentificationNumber()));
 
     if (inactiveStaffUser.isEmpty()) {
       throw new NotFoundException("There is no inactive user without company: " + email);
@@ -165,9 +153,7 @@ public class StaffService {
 
   private void assertStaffUserIsInactive(String email, String taxIdentificationNumber) {
     this.staffRepository.findByEmailAndTaxIdentificationNumber(email, taxIdentificationNumber)
-        .stream()
         .filter(staff -> Status.ACTIVE.equals(staff.getStatus()))
-        .findFirst()
         .ifPresent(staff -> {
           throw new ConflictException("Relationship is not inactive: email " + email + " - taxIdentificationNumber " + taxIdentificationNumber);
         });

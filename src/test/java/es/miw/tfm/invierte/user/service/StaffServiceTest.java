@@ -3,6 +3,8 @@ package es.miw.tfm.invierte.user.service;
 import static es.miw.tfm.invierte.user.util.DummyStaffUtil.EMAIL;
 import static es.miw.tfm.invierte.user.util.DummyStaffUtil.NAME;
 import static es.miw.tfm.invierte.user.util.DummyStaffUtil.TOKEN;
+import static es.miw.tfm.invierte.user.util.DummyStaffUtil.buildActiveStaff;
+import static es.miw.tfm.invierte.user.util.DummyStaffUtil.buildActiveStaffWithNoCompany;
 import static es.miw.tfm.invierte.user.util.DummyStaffUtil.buildInactiveStaff;
 import static es.miw.tfm.invierte.user.util.DummyStaffUtil.buildInactiveStaffWithNoCompany;
 import static es.miw.tfm.invierte.user.util.DummyStaffUtil.createRandomPasswordChangeDto;
@@ -12,33 +14,37 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.isA;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 import es.miw.tfm.invierte.user.data.dao.StaffRepository;
 import es.miw.tfm.invierte.user.data.dao.UserRepository;
 import es.miw.tfm.invierte.user.data.model.ActivationCode;
 import es.miw.tfm.invierte.user.data.model.Staff;
 import es.miw.tfm.invierte.user.data.model.enums.CompanyRole;
+import es.miw.tfm.invierte.user.data.model.enums.Gender;
 import es.miw.tfm.invierte.user.data.model.enums.Status;
+import es.miw.tfm.invierte.user.service.exception.ConflictException;
 import es.miw.tfm.invierte.user.service.exception.NotFoundException;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
-import org.mockito.Spy;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
@@ -63,6 +69,8 @@ class StaffServiceTest {
   @Spy
   private Staff staff;
 
+  private static final String TAX_IDENTIFICATION_NUMBER = "123456";
+
   @Test
   void testActivateAccount() {
     final var mockedInactiveStaff = buildInactiveStaff();
@@ -72,29 +80,44 @@ class StaffServiceTest {
     mockedInactiveStaff.getActivationCodes().add(activationCode);
 
     when(this.staffRepository.findAll()).thenReturn(List.of(mockedInactiveStaff));
-    staffService.activateAccount(activationCode.getCode());
-    verify(this.staffRepository).save(any(Staff.class));
+    this.staffService.activateAccount(activationCode.getCode());
+    verify(this.staffRepository).save(argThat(staffSave -> Status.ACTIVE.equals(staffSave.getStatus())));
+  }
+
+  @Test
+  void testActivateAccountNotFound() {
+    final var mockedInactiveStaff = buildInactiveStaff();
+    ActivationCode activationCode = new ActivationCode();
+    activationCode.setCode(UUID.randomUUID().toString());
+    activationCode.setExpirationDate(LocalDateTime.now().plusMinutes(30));
+    mockedInactiveStaff.getActivationCodes().add(activationCode);
+
+    when(this.staffRepository.findAll()).thenReturn(List.of(mockedInactiveStaff));
+    assertThrows(NotFoundException.class, ()->this.staffService.activateAccount(UUID.randomUUID().toString()));
+
+    verify(this.staffRepository, never()).save(any());
   }
 
   @Test
   void testChangePasswordWhenIsOk() {
     staff = createRandomStaff(Status.ACTIVE);
-    when(staffRepository.findByEmailAndStatus(anyString(), isA(Status.class)))
-            .thenReturn(List.of(staff));
+    when(this.staffRepository.findByEmailAndStatus(anyString(), isA(Status.class)))
+            .thenReturn(Optional.of(staff));
     final var passwordChangeDto = createRandomPasswordChangeDto();
     var staffChangePass = createRandomStaff(Status.ACTIVE);
     staffChangePass.setPassword(new BCryptPasswordEncoder()
             .encode(passwordChangeDto.getNewPassword()));
-    when(staffRepository.save(isA(Staff.class))).thenReturn(staffChangePass);
+    when(this.staffRepository.save(isA(Staff.class))).thenReturn(staffChangePass);
 
     assertDoesNotThrow(() ->
-      staffService.changePassword(staff.getEmail(), passwordChangeDto));
+      this.staffService.changePassword(staff.getEmail(), passwordChangeDto));
+    verify(this.staffRepository).save(any());
   }
 
   @Test
   void testCreateUserWithNoCompany() {
     final var mockedStaff = buildInactiveStaffWithNoCompany();
-    when(this.staffRepository.findByEmail(EMAIL)).thenReturn(List.of());
+    when(this.staffRepository.findByEmail(EMAIL)).thenReturn(Optional.empty());
     this.staffService.createUserWithNoCompany(mockedStaff);
     verify(this.staffRepository).save(argThat(newStaff ->
         newStaff.getEmail().equals(EMAIL)
@@ -108,16 +131,26 @@ class StaffServiceTest {
   }
 
   @Test
+  void testCreateUserWithNoCompanyUserIsActive() {
+    final var mockedStaff = buildActiveStaffWithNoCompany();
+    when(this.staffRepository.findByEmail(EMAIL)).thenReturn(Optional.of(mockedStaff));
+    assertThrows(ConflictException.class,() ->this.staffService.createUserWithNoCompany(mockedStaff));
+  }
+
+  @Test
   void testLoginSuccess() {
     final var mockedStaff = buildInactiveStaff();
-    when(this.userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(mockedStaff));
-    when(this.staffRepository.findByEmailAndStatus(EMAIL, Status.ACTIVE)).thenReturn(List.of(mockedStaff));
-    when(this.jwtService.createToken(anyString(), anyString(), anyMap())).thenReturn(TOKEN);
+    final var mockedStaffRoles = new HashMap<String, String>();
+    mockedStaffRoles.put(mockedStaff.getTaxIdentificationNumber(), mockedStaff.getCompanyRole().name());
 
-    String actualToken = staffService.login(EMAIL);
+    when(this.userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(mockedStaff));
+    when(this.staffRepository.findByEmailAndStatus(EMAIL, Status.ACTIVE)).thenReturn(Optional.of(mockedStaff));
+    when(this.jwtService.createToken(EMAIL, NAME, mockedStaffRoles)).thenReturn(TOKEN);
+
+    String actualToken = this.staffService.login(EMAIL);
 
     verify(this.userRepository).findByEmail(EMAIL);
-    verify(this.jwtService).createToken(eq(EMAIL), eq(NAME), anyMap());
+    verify(this.jwtService).createToken(EMAIL, NAME, mockedStaffRoles);
     assertEquals(TOKEN, actualToken);
   }
 
@@ -130,56 +163,91 @@ class StaffServiceTest {
   @Test
   void testSetCompanyToUser() {
     final var mockedInactiveStaffWithNoCompany = buildInactiveStaffWithNoCompany();
-    when(this.staffRepository.findByEmailAndStatus(EMAIL, Status.INACTIVE)).thenReturn(List.of(mockedInactiveStaffWithNoCompany));
-    this.staffService.setCompanyToUser(EMAIL, "123456");
-    verify(this.staffRepository).save(any(Staff.class));
+    when(this.staffRepository.findByEmailAndStatus(EMAIL, Status.INACTIVE)).thenReturn(Optional.of(mockedInactiveStaffWithNoCompany));
+
+    this.staffService.setCompanyToUser(EMAIL, TAX_IDENTIFICATION_NUMBER);
+
+    verify(this.staffRepository, times(2)).findByEmailAndStatus(EMAIL, Status.INACTIVE);
+    verify(this.staffRepository).save(argThat(newStaff ->
+        newStaff.getEmail().equals(EMAIL)
+            && newStaff.getStatus().equals(Status.INACTIVE)
+            && newStaff.getTaxIdentificationNumber().equals(TAX_IDENTIFICATION_NUMBER)
+    ));
+
   }
 
   @Test
   void testGetActivationCodeMessage() {
     final var mockedInactiveStaff = buildInactiveStaff();
-    when(this.staffRepository.findByEmailAndTaxIdentificationNumber(EMAIL, "123456")).thenReturn(List.of(mockedInactiveStaff));
+    when(this.staffRepository.findByEmailAndTaxIdentificationNumber(EMAIL, TAX_IDENTIFICATION_NUMBER))
+        .thenReturn(Optional.of(mockedInactiveStaff));
     when(this.staffRepository.save(any(Staff.class))).thenReturn(staff);
-    Optional<String> message = staffService.getActivationCodeMessage(EMAIL, "123456");
+
+    Optional<String> message = this.staffService.getActivationCodeMessage(EMAIL, TAX_IDENTIFICATION_NUMBER);
+
+    verify(this.staffRepository, times(2))
+        .findByEmailAndTaxIdentificationNumber(EMAIL, TAX_IDENTIFICATION_NUMBER);
     verify(this.staffRepository).save(any(Staff.class));
     assertTrue(message.isPresent());
   }
 
   @Test
+  void testGetActivationCodeMessageUserIsActive() {
+    final var mockedActiveStaff = buildActiveStaff();
+    when(this.staffRepository.findByEmailAndTaxIdentificationNumber(EMAIL, TAX_IDENTIFICATION_NUMBER))
+        .thenReturn(Optional.of(mockedActiveStaff));
+
+    assertThrows(ConflictException.class, ()-> this.staffService.getActivationCodeMessage(EMAIL, TAX_IDENTIFICATION_NUMBER));
+
+    verify(this.staffRepository, times(1))
+        .findByEmailAndTaxIdentificationNumber(EMAIL, TAX_IDENTIFICATION_NUMBER);
+
+
+  }
+
+  @Test
   void testUpdateGeneralInfoWhenIsOk() {
     var staffActive = createRandomStaff(Status.ACTIVE);
-    when(staffRepository.findByEmailAndStatus(anyString(), isA(Status.class)))
-      .thenReturn(List.of(staffActive));
-    when(staffRepository.save(staffCaptor.capture())).thenReturn(staffActive);
+    when(this.staffRepository.findByEmailAndStatus(anyString(), isA(Status.class)))
+      .thenReturn(Optional.of(staffActive));
+    when(this.staffRepository.save(this.staffCaptor.capture())).thenReturn(staffActive);
+    
     var staffInfoDto = createRandomStaffInfoDto();
-    staffService.updateGeneralInfo(EMAIL, staffInfoDto);
-    assertEquals(staffActive.getFirstName(), staffCaptor.getValue().getFirstName());
+    
+    this.staffService.updateGeneralInfo(EMAIL, staffInfoDto);
+    assertEquals(staffActive.getFirstName(), this.staffCaptor.getValue().getFirstName());
+    verify(this.staffRepository).save(argThat(newStaff ->
+        newStaff.getEmail().equals(EMAIL)
+            && newStaff.getFirstName().equals(staffInfoDto.getFirstName())
+            && newStaff.getFamilyName().equals(staffInfoDto.getFamilyName())
+            && Gender.MALE.equals(newStaff.getGender())
+    ));
   }
 
   @Test
   void testUpdateGeneralInfoWhenIsNotFound() {
-    when(staffRepository.findByEmailAndStatus(anyString(), isA(Status.class)))
-      .thenReturn(List.of());
+    when(this.staffRepository.findByEmailAndStatus(anyString(), isA(Status.class)))
+      .thenReturn(Optional.empty());
     var staffInfoDto = createRandomStaffInfoDto();
     assertThrows(NotFoundException.class, () ->
-      staffService.updateGeneralInfo(EMAIL, staffInfoDto));
+      this.staffService.updateGeneralInfo(EMAIL, staffInfoDto));
   }
 
   @Test
   void testReadGeneralInfoWhenIsOk() {
     var staffActive = createRandomStaff(Status.ACTIVE);
-    when(staffRepository.findByEmailAndStatus(anyString(), isA(Status.class)))
-      .thenReturn(List.of(staffActive));
-    var infoDto = staffService.readGeneralInfo(EMAIL);
+    when(this.staffRepository.findByEmailAndStatus(anyString(), isA(Status.class)))
+      .thenReturn(Optional.of(staffActive));
+    var infoDto = this.staffService.readGeneralInfo(EMAIL);
     assertEquals(staffActive.getFirstName(), infoDto.getFirstName());
     verify(staffRepository).findByEmailAndStatus(EMAIL, Status.ACTIVE);
   }
 
   @Test
   void testReadGeneralInfoWhenIsNotFound() {
-    when(staffRepository.findByEmailAndStatus(anyString(), isA(Status.class)))
-      .thenReturn(List.of());
+    when(this.staffRepository.findByEmailAndStatus(anyString(), isA(Status.class)))
+      .thenReturn(Optional.empty());
     assertThrows(NotFoundException.class, () ->
-            staffService.readGeneralInfo(EMAIL));
+            this.staffService.readGeneralInfo(EMAIL));
   }
 }
