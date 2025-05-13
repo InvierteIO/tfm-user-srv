@@ -52,7 +52,7 @@ public class OperatorResourceTest {
   }
 
   @Test
-  void testCreateUserOperator() throws Exception {
+  void testCreateUserOperator() {
 
     GrantedAuthority mockAuthority = () -> "ROLE_SUPPORT";
     Collection<GrantedAuthority> grantedAuthorities = new ArrayList<>();

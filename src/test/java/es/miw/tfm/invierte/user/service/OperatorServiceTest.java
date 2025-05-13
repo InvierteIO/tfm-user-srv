@@ -112,7 +112,7 @@ class OperatorServiceTest {
     when(operatorRepository.findByEmail(EMAIL)).thenReturn(Optional.empty());
     operatorService.createUser(operator, SystemRole.ADMIN);
     verify(this.operatorRepository)
-        .save(argThat(operator -> !Objects.isNull(operator.getRegistrationDate())));
+        .save(argThat(operatorSave -> !Objects.isNull(operatorSave.getRegistrationDate())));
   }
 
   @Test
@@ -120,7 +120,7 @@ class OperatorServiceTest {
     when(operatorRepository.findByEmail(EMAIL)).thenReturn(Optional.empty());
     operatorService.createUser(operator, SystemRole.SUPPORT);
     verify(this.operatorRepository)
-        .save(argThat(operator -> !Objects.isNull(operator.getRegistrationDate())));
+        .save(argThat(operatorSave -> !Objects.isNull(operatorSave.getRegistrationDate())));
   }
 
 

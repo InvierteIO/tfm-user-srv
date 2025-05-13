@@ -17,12 +17,14 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 
 /**
  * Configuration class for Spring Security.
@@ -102,10 +104,14 @@ public class SecurityConfiguration {
    * @throws Exception if an error occurs during configuration
    */
   @Bean
-  @SuppressWarnings("java:S4502")
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
+    RequestMatcher csrfExcludedEndpoints = new OrRequestMatcher(
+        new AntPathRequestMatcher("/users/**")
+    );
+
     http
-        .csrf(AbstractHttpConfigurer::disable)
+        .csrf(csrf -> csrf.ignoringRequestMatchers(csrfExcludedEndpoints))
         .httpBasic(withDefaults())
         .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
         .authenticationProvider(authenticationProvider())

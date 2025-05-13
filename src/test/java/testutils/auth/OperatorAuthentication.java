@@ -76,6 +76,7 @@ public class OperatorAuthentication implements Authentication {
 
   @Override
   public void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException {
+    //Empty method
   }
 
   @Override

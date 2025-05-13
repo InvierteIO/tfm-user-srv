@@ -8,7 +8,7 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class JwtServiceTest {
+class JwtServiceTest {
 
   private JwtService jwtService;
 
@@ -38,14 +38,14 @@ public class JwtServiceTest {
   @Test
   void testCreateTokenWithRole() {
     String token = jwtService.createToken("user1", "User One", "ROLE_USER");
-    assertTrue(token.split("\\.").length == 3); // Valid JWT format
+    assertEquals(3, token.split("\\.").length); // Valid JWT format
   }
 
   @Test
   void testCreateTokenWithCompanyRoles() {
     Map<String, String> companyRoles = Map.of("CompanyA", "ROLE_ADMIN", "CompanyB", "ROLE_USER");
     String token = jwtService.createToken("user2", "User Two", companyRoles);
-    assertTrue(token.split("\\.").length == 3); // Valid JWT format
+    assertEquals(3, token.split("\\.").length); // Valid JWT format
   }
 
   @Test

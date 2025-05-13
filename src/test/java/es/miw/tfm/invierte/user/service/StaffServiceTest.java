@@ -93,7 +93,8 @@ class StaffServiceTest {
     mockedInactiveStaff.getActivationCodes().add(activationCode);
 
     when(this.staffRepository.findAll()).thenReturn(List.of(mockedInactiveStaff));
-    assertThrows(NotFoundException.class, ()->this.staffService.activateAccount(UUID.randomUUID().toString()));
+    String nonValidActivationCode = UUID.randomUUID().toString();
+    assertThrows(NotFoundException.class, ()->this.staffService.activateAccount(nonValidActivationCode));
 
     verify(this.staffRepository, never()).save(any());
   }
