@@ -104,6 +104,7 @@ public class SecurityConfiguration {
    * @throws Exception if an error occurs during configuration
    */
   @Bean
+  @SuppressWarnings("java:S4502")
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
     RequestMatcher csrfExcludedEndpoints = new OrRequestMatcher(
