@@ -8,6 +8,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Data Transfer Object (DTO) for Staff Company.
+ * This class is used to transfer staff company-related data between different
+ * layers of the application.
+ *
+ * @author denilssonmn
+ * @author dev_castle
+ */
 @Data
 @NoArgsConstructor
 @Builder

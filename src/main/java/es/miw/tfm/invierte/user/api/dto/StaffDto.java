@@ -1,13 +1,12 @@
 package es.miw.tfm.invierte.user.api.dto;
 
-import java.time.LocalDate;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import es.miw.tfm.invierte.user.data.model.Staff;
 import es.miw.tfm.invierte.user.data.model.enums.CompanyRole;
 import es.miw.tfm.invierte.user.data.model.enums.Gender;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,6 +14,14 @@ import lombok.NoArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+/**
+ * Data Transfer Object (DTO) for Staff.
+ * This class is used to transfer staff-related data between different layers of the application.
+ * It includes validation annotations and utility methods for converting to the Staff entity.
+ *
+ * @author denilssonmn
+ * @author dev_castle
+ */
 @Data
 @NoArgsConstructor
 @Builder
@@ -52,6 +59,12 @@ public class StaffDto {
 
   private String taxIdentificationNumber;
 
+  /**
+   * Converts this `StaffDto` object to a `Staff` entity.
+   * Copies the properties from the DTO to the entity and encodes the password.
+   *
+   * @return a `Staff` entity with the properties of this DTO
+   */
   public Staff toStaff() {
     Staff staff = new Staff();
     BeanUtils.copyProperties(this, staff);
