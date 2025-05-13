@@ -22,7 +22,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 @ExtendWith({MockitoExtension.class})
-public class JwtAuthenticationFilterTest {
+class JwtAuthenticationFilterTest {
 
   @Mock
   private JwtService jwtService;
