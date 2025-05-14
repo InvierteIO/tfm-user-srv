@@ -206,6 +206,11 @@
       <version>4.5.1</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>secretsmanager</artifactId>
+      <version>${software.amazon.awssdk.version}</version>
+    </dependency>
   </dependencies>
   <description>Service to handle user related actions</description>
   <developers>
@@ -226,6 +231,7 @@
   <properties>
     <java.version>21</java.version>
     <jwt.version>4.4.0</jwt.version>
+    <software.amazon.awssdk.version>2.25.31</software.amazon.awssdk.version>
     <springdoc-openapi-starter-webmvc-ui.version>2.8.4</springdoc-openapi-starter-webmvc-ui.version>
     <sonar.coverage.jacoco.xmlReportPaths>../app-project-name/target/jacoco-report/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
   </properties>

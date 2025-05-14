@@ -112,7 +112,7 @@ public class OperatorService {
        .stream()
        .findFirst()
        .map(operator ->
-           jwtService.createToken(operator.getEmail(),
+           this.jwtService.createToken(operator.getEmail(),
                operator.getFirstName(),
                operator.getSystemRole().name()))
        .orElseThrow(() -> new NotFoundException("Impossible, you should have already logged in."));

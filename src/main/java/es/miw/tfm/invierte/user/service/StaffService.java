@@ -88,7 +88,7 @@ public class StaffService {
             Staff::getTaxIdentificationNumber,
             staff -> staff.getCompanyRole().name()));
 
-    return jwtService.createToken(user.getEmail(), user.getFirstName(), companyRoles);
+    return this.jwtService.createToken(user.getEmail(), user.getFirstName(), companyRoles);
   }
 
   /**
