@@ -2,7 +2,8 @@ package es.miw.tfm.invierte.user.data.model.enums;
 
 public enum CompanyRole {
   OWNER,
-  AGENT;
+  REALTOR,
+  ADMINISTRATIVE_ASSISTANT;
 
   public static final String PREFIX = "ROLE_";
 
