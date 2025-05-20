@@ -86,7 +86,7 @@ public class DummyStaffUtil {
             .familyName("new")
             .email("new@email.com")
             .password("newpass")
-            .companyRole(CompanyRole.AGENT)
+            .companyRole(CompanyRole.REALTOR)
             .build();
     }
 
@@ -94,7 +94,7 @@ public class DummyStaffUtil {
         Staff staff = new Staff();
         staff.setEmail(EMAIL);
         staff.setFirstName(NAME);
-        staff.setCompanyRole(CompanyRole.AGENT);
+        staff.setCompanyRole(CompanyRole.REALTOR);
         staff.setTaxIdentificationNumber("123456");
         staff.setStatus(Status.INACTIVE);
         return staff;
@@ -104,7 +104,7 @@ public class DummyStaffUtil {
         Staff staff = new Staff();
         staff.setEmail(EMAIL);
         staff.setFirstName(NAME);
-        staff.setCompanyRole(CompanyRole.AGENT);
+        staff.setCompanyRole(CompanyRole.REALTOR);
         staff.setTaxIdentificationNumber("123456");
         staff.setStatus(Status.ACTIVE);
         return staff;
@@ -114,7 +114,7 @@ public class DummyStaffUtil {
         Staff staff = new Staff();
         staff.setEmail(EMAIL);
         staff.setFirstName(NAME);
-        staff.setCompanyRole(CompanyRole.AGENT);
+        staff.setCompanyRole(CompanyRole.REALTOR);
         staff.setStatus(Status.INACTIVE);
         return staff;
     }
@@ -123,7 +123,7 @@ public class DummyStaffUtil {
         Staff staff = new Staff();
         staff.setEmail(EMAIL);
         staff.setFirstName(NAME);
-        staff.setCompanyRole(CompanyRole.AGENT);
+        staff.setCompanyRole(CompanyRole.REALTOR);
         staff.setStatus(Status.ACTIVE);
         return staff;
     }
@@ -132,7 +132,7 @@ public class DummyStaffUtil {
         Staff staff = new Staff();
         staff.setEmail(EMAIL);
         staff.setFirstName(NAME);
-        staff.setCompanyRole(CompanyRole.AGENT);
+        staff.setCompanyRole(CompanyRole.REALTOR);
         staff.setStatus(Status.INACTIVE);
         staff.setTaxIdentificationNumber(TAX_IDENTIFICATION_NUMBER);
         return staff;

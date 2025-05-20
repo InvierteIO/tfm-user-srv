@@ -66,4 +66,9 @@ public class Staff extends User {
     this.taxIdentificationNumber = null;
   }
 
+  public void setNewCompanyUserDefault() {
+    this.status = Status.INACTIVE;
+    this.setPassword(null);
+  }
+
 }

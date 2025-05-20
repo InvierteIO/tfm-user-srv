@@ -4,6 +4,8 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import es.miw.tfm.invierte.user.service.jwt_provider.JwtKeyProvider;
+
+import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
@@ -149,6 +151,18 @@ public class JwtService {
     return this.verify(authorization)
         .map(jwt -> jwt.getClaim(ROLE_CLAIM).asString())
         .orElse("");
+  }
+
+  /**
+   * Extracts the user's company roles from the JWT token.
+   *
+   * @param authorization the JWT token
+   * @return a map of company roles or an empty map if invalid
+   */
+  public Map<String, Object> roles(String authorization) {
+    return this.verify(authorization)
+        .map(jwt -> jwt.getClaim(COMPANY_ROLE_CLAIM).asMap())
+        .orElse(Collections.emptyMap());
   }
 
   /**

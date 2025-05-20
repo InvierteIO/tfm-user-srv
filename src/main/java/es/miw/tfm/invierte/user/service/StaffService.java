@@ -1,6 +1,8 @@
 package es.miw.tfm.invierte.user.service;
 
+import es.miw.tfm.invierte.user.api.dto.AccountConfirmationDto;
 import es.miw.tfm.invierte.user.api.dto.PasswordChangeDto;
+import es.miw.tfm.invierte.user.api.dto.PasswordResetDto;
 import es.miw.tfm.invierte.user.api.dto.StaffInfoDto;
 import es.miw.tfm.invierte.user.data.dao.StaffRepository;
 import es.miw.tfm.invierte.user.data.dao.UserRepository;
@@ -57,6 +59,12 @@ public class StaffService {
   @Value("${message.activation-code.base-url}")
   private String messageBaseUrl;
 
+  @Value("${message.reset-password-code.text}")
+  private String messageResetPasswordText;
+
+  @Value("${message.reset-password-code.base-url}")
+  private String messageResetPasswordBaseUrl;
+
   /**
    * Generates a new activation code with a 30-minute expiration time.
    *
@@ -105,6 +113,19 @@ public class StaffService {
   }
 
   /**
+   * Creates a new staff user associated to a Company.
+   *
+   * @param staff the staff user to be created
+   * @throws ConflictException if the email already exists
+   */
+  public void createUserWithCompany(Staff staff) {
+    staff.setNewCompanyUserDefault();
+    this.assertNoExistByEmail(staff.getEmail());
+    staff.setRegistrationDate(LocalDateTime.now());
+    this.staffRepository.save(staff);
+  }
+
+  /**
    * Assigns a company to an inactive staff user without a company.
    *
    * @param email the email of the staff user
@@ -142,17 +163,42 @@ public class StaffService {
   }
 
   /**
+   * Retrieves a reset password notification code message for a staff user.
+   * Generates a new activation code, associates it with the staff user, and returns
+   * the reset password notification message.
+   *
+   * @param email the email of the staff user
+   * @return an optional containing the reset password notification message, or empty if not found
+   * @throws ConflictException if the user is not active
+   */
+  public Optional<String> getResetPasswordNotificationCodeMessage(String email) {
+    final var activeStaff = this.assertStaffUserIsActive(email);
+    return Optional.of(activeStaff)
+        .map(staff -> {
+          final var newActivationCode = generateActivationCode();
+          staff.getActivationCodes().add(newActivationCode);
+          this.staffRepository.save(staff);
+          return newActivationCode;
+        })
+        .map(this::getResetPasswordCodeBodyMessage);
+  }
+
+
+  /**
    * Activates a staff user's account using an activation code.
    *
    * @param activationCode the activation code
    * @throws NotFoundException if the activation code is not found or expired
    */
-  public void activateAccount(String activationCode) {
-    final var staffWithValidActivationCode = this.findStaffByActivationCode(activationCode)
+  public AccountConfirmationDto activateAccount(String activationCode) {
+    return this.findStaffByNotificationCode(activationCode)
+        .map(staff -> {
+          staff.setStatus(Status.ACTIVE);
+          this.staffRepository.save(staff);
+          return new AccountConfirmationDto(!Objects.isNull(staff.getPassword()));
+        })
         .orElseThrow(() ->
             new NotFoundException("Activation code not found or expired: " + activationCode));
-    staffWithValidActivationCode.setStatus(Status.ACTIVE);
-    this.staffRepository.save(staffWithValidActivationCode);
   }
 
   /**
@@ -174,6 +220,28 @@ public class StaffService {
           })
           .orElseThrow(() -> new BadRequestException("Passwords do not match with old password"))
         )
+        .map(staffRepository::save)
+        .orElseThrow(() -> new NotFoundException("User not found"));
+  }
+
+  /**
+   * Resets the password of a staff user.
+   * Validates the provided notification token and ensures the user is active.
+   * Updates the user's password with the new password provided in the DTO.
+   *
+   * @param email the email of the staff user
+   * @param passwordResetDto the DTO containing the notification token and new password
+   * @throws NotFoundException if the user is not found or the token is invalid
+   */
+  public void resetPassword(String email, PasswordResetDto passwordResetDto) {
+    BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    this.findStaffByNotificationCode(passwordResetDto.getNotificationToken())
+        .filter(staff ->  Status.ACTIVE.equals(staff.getStatus())
+            && staff.getEmail().equals(email))
+        .map(staff -> {
+          staff.setPassword(passwordEncoder.encode(passwordResetDto.getNewPassword()));
+          return staff;
+        })
         .map(staffRepository::save)
         .orElseThrow(() -> new NotFoundException("User not found"));
   }
@@ -221,6 +289,12 @@ public class StaffService {
         + activationCode.getCode());
   }
 
+  private String getResetPasswordCodeBodyMessage(ActivationCode activationCode) {
+    return String.format("%s %s", this.messageResetPasswordText,
+        this.messageResetPasswordBaseUrl + "/"
+        + activationCode.getCode());
+  }
+
   /**
    * Asserts that a user is inactive and has no company assigned.
    *
@@ -239,15 +313,15 @@ public class StaffService {
   /**
    * Finds a staff user by activation code.
    *
-   * @param activationCode the activation code
+   * @param notificationCode the notification code
    * @return an optional containing the staff user, or empty if not found
    */
-  private Optional<Staff> findStaffByActivationCode(String activationCode) {
+  private Optional<Staff> findStaffByNotificationCode(String notificationCode) {
     return this.staffRepository.findAll()
         .stream()
         .filter(staff -> staff.getActivationCodes()
             .stream()
-            .anyMatch(code -> code.getCode().equals(activationCode)
+            .anyMatch(code -> code.getCode().equals(notificationCode)
                 && code.getExpirationDate().isAfter(LocalDateTime.now())))
         .findFirst();
   }
@@ -267,6 +341,13 @@ public class StaffService {
               + " - taxIdentificationNumber " + taxIdentificationNumber);
         });
   }
+
+  private Staff assertStaffUserIsActive(String email) {
+    return this.staffRepository.findByEmail(email)
+        .filter(staff -> Status.ACTIVE.equals(staff.getStatus()))
+        .orElseThrow(() -> new ConflictException("User is not active: email " + email));
+  }
+
 
   /**
    * Asserts that no staff user exists with the given email.

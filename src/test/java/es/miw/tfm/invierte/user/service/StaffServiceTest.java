@@ -12,6 +12,9 @@ import static es.miw.tfm.invierte.user.util.DummyStaffUtil.createRandomStaff;
 import static es.miw.tfm.invierte.user.util.DummyStaffUtil.createRandomStaffInfoDto;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -26,9 +29,11 @@ import static org.mockito.Mockito.when;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+import es.miw.tfm.invierte.user.api.dto.PasswordResetDto;
 import es.miw.tfm.invierte.user.data.dao.StaffRepository;
 import es.miw.tfm.invierte.user.data.dao.UserRepository;
 import es.miw.tfm.invierte.user.data.model.ActivationCode;
@@ -38,6 +43,7 @@ import es.miw.tfm.invierte.user.data.model.enums.Gender;
 import es.miw.tfm.invierte.user.data.model.enums.Status;
 import es.miw.tfm.invierte.user.service.exception.ConflictException;
 import es.miw.tfm.invierte.user.service.exception.NotFoundException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -47,6 +53,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith({MockitoExtension.class})
 class StaffServiceTest {
@@ -71,6 +78,13 @@ class StaffServiceTest {
 
   private static final String TAX_IDENTIFICATION_NUMBER = "123456";
 
+  @BeforeEach
+  void setUp() {
+    ReflectionTestUtils.setField(staffService, "messageBaseUrl", "account-confirmation");
+    ReflectionTestUtils.setField(staffService, "messageResetPasswordBaseUrl", "reset-password");
+  }
+
+
   @Test
   void testActivateAccount() {
     final var mockedInactiveStaff = buildInactiveStaff();
@@ -80,8 +94,13 @@ class StaffServiceTest {
     mockedInactiveStaff.getActivationCodes().add(activationCode);
 
     when(this.staffRepository.findAll()).thenReturn(List.of(mockedInactiveStaff));
-    this.staffService.activateAccount(activationCode.getCode());
+
+    final var actualResult = this.staffService.activateAccount(activationCode.getCode());
+
     verify(this.staffRepository).save(argThat(staffSave -> Status.ACTIVE.equals(staffSave.getStatus())));
+    assertNotNull(actualResult);
+    assertFalse(actualResult.isPasswordSet());
+
   }
 
   @Test
@@ -190,6 +209,7 @@ class StaffServiceTest {
         .findByEmailAndTaxIdentificationNumber(EMAIL, TAX_IDENTIFICATION_NUMBER);
     verify(this.staffRepository).save(any(Staff.class));
     assertTrue(message.isPresent());
+    assertTrue(message.get().contains("account-confirmation"));
   }
 
   @Test
@@ -202,8 +222,6 @@ class StaffServiceTest {
 
     verify(this.staffRepository, times(1))
         .findByEmailAndTaxIdentificationNumber(EMAIL, TAX_IDENTIFICATION_NUMBER);
-
-
   }
 
   @Test
@@ -250,5 +268,133 @@ class StaffServiceTest {
       .thenReturn(Optional.empty());
     assertThrows(NotFoundException.class, () ->
             this.staffService.readGeneralInfo(EMAIL));
+  }
+
+  @Test
+  void testCreateUserWithCompanyWhenIsOk() {
+    final var mockedInactiveStaff = buildInactiveStaff();
+    when(this.staffRepository.findByEmail(EMAIL)).thenReturn(Optional.empty());
+
+    this.staffService.createUserWithCompany(mockedInactiveStaff);
+
+    verify(this.staffRepository).save(argThat(newStaff ->
+        newStaff.getEmail().equals(EMAIL)
+            && newStaff.getStatus().equals(Status.INACTIVE)
+            && newStaff.getTaxIdentificationNumber().equals(TAX_IDENTIFICATION_NUMBER)
+            && newStaff.getCompanyRole().equals(CompanyRole.REALTOR)
+            && !Objects.isNull(newStaff.getRegistrationDate())
+            && Objects.isNull(newStaff.getPassword())
+    ));
+  }
+
+  @Test
+  void testCreateUserWithCompanyUserAlreadyExists() {
+    final var mockedStaff = buildActiveStaff();
+    when(this.staffRepository.findByEmail(EMAIL)).thenReturn(Optional.of(mockedStaff));
+
+    assertThrows(ConflictException.class, () ->
+        this.staffService.createUserWithCompany(mockedStaff));
+
+    verify(this.staffRepository, never()).save(any());
+  }
+
+  @Test
+  void testGetResetPasswordNotificationCodeMessage() {
+    final var mockedInactiveStaff = buildActiveStaff();
+    when(this.staffRepository.findByEmail(EMAIL))
+        .thenReturn(Optional.of(mockedInactiveStaff));
+    when(this.staffRepository.save(any(Staff.class))).thenReturn(staff);
+
+    Optional<String> message = this.staffService.getResetPasswordNotificationCodeMessage(EMAIL);
+
+    verify(this.staffRepository, times(1)).findByEmail(EMAIL);
+    verify(this.staffRepository).save(any(Staff.class));
+    assertTrue(message.isPresent());
+    assertTrue(message.get().contains("reset-password"));
+  }
+
+  @Test
+  void testGetResetPasswordNotificationCodeMessageUserIsInactive() {
+    final var mockedActiveStaff = buildInactiveStaff();
+    when(this.staffRepository.findByEmail(EMAIL))
+        .thenReturn(Optional.of(mockedActiveStaff));
+
+    assertThrows(ConflictException.class, ()-> this.staffService.getResetPasswordNotificationCodeMessage(EMAIL));
+
+    verify(this.staffRepository, times(1))
+        .findByEmail(EMAIL);
+  }
+
+  @Test
+  void testResetPasswordWhenIsOk() {
+    final var mockedActiveStaff = buildActiveStaff();
+    ActivationCode activationCode = new ActivationCode();
+    activationCode.setCode(TOKEN);
+    activationCode.setExpirationDate(LocalDateTime.now().plusMinutes(30));
+    mockedActiveStaff.getActivationCodes().add(activationCode);
+
+    PasswordResetDto passwordResetDto = new PasswordResetDto();
+    passwordResetDto.setNotificationToken(TOKEN);
+    passwordResetDto.setNewPassword("newPassword123");
+
+    when(this.staffRepository.findAll()).thenReturn(List.of(mockedActiveStaff));
+    when(this.staffRepository.save(any(Staff.class))).thenReturn(mockedActiveStaff);
+
+    assertDoesNotThrow(() -> this.staffService.resetPassword(EMAIL, passwordResetDto));
+
+    verify(this.staffRepository).save(argThat(staff ->
+        new BCryptPasswordEncoder().matches(passwordResetDto.getNewPassword(), staff.getPassword())
+    ));
+  }
+
+  @Test
+  void testResetPasswordUserNotFound() {
+    PasswordResetDto passwordResetDto = new PasswordResetDto();
+    passwordResetDto.setNotificationToken(TOKEN);
+    passwordResetDto.setNewPassword("newPassword123");
+
+    final var mockedActiveStaff = buildInactiveStaff();
+    ActivationCode activationCode = new ActivationCode();
+    activationCode.setCode(TOKEN);
+    activationCode.setExpirationDate(LocalDateTime.now().plusMinutes(30));
+    mockedActiveStaff.getActivationCodes().add(activationCode);
+
+    when(this.staffRepository.findAll()).thenReturn(List.of(mockedActiveStaff));
+
+    assertThrows(NotFoundException.class, () -> this.staffService.resetPassword(EMAIL, passwordResetDto));
+
+    verify(this.staffRepository, never()).save(any());
+  }
+
+  @Test
+  void testResetPasswordUserInactive() {
+    PasswordResetDto passwordResetDto = new PasswordResetDto();
+    passwordResetDto.setNotificationToken(TOKEN);
+    passwordResetDto.setNewPassword("newPassword123");
+
+    when(this.staffRepository.findAll()).thenReturn(List.of());
+
+    assertThrows(NotFoundException.class, () -> this.staffService.resetPassword(EMAIL, passwordResetDto));
+
+    verify(this.staffRepository, never()).save(any());
+  }
+
+  @Test
+  void testResetPasswordInvalidToken() {
+    final var mockedActiveStaff = buildActiveStaff();
+    ActivationCode activationCode = new ActivationCode();
+    activationCode.setCode("invalidToken");
+    activationCode.setExpirationDate(LocalDateTime.now().plusMinutes(30));
+    mockedActiveStaff.getActivationCodes().add(activationCode);
+
+    PasswordResetDto passwordResetDto = new PasswordResetDto();
+    passwordResetDto.setNotificationToken(TOKEN);
+    passwordResetDto.setNewPassword("newPassword123");
+
+    when(this.staffRepository.findAll()).thenReturn(List.of(mockedActiveStaff));
+
+    assertThrows(NotFoundException.class, () -> this.staffService.resetPassword(EMAIL, passwordResetDto));
+
+    verify(this.staffRepository, never()).save(any());
   }
 }

@@ -2,17 +2,22 @@ package es.miw.tfm.invierte.user.api.resource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
 
+import es.miw.tfm.invierte.user.api.dto.AccountConfirmationDto;
 import es.miw.tfm.invierte.user.api.dto.PasswordChangeDto;
+import es.miw.tfm.invierte.user.api.dto.PasswordResetDto;
 import es.miw.tfm.invierte.user.api.dto.StaffCompanyDto;
 import es.miw.tfm.invierte.user.api.dto.StaffDto;
 import es.miw.tfm.invierte.user.api.dto.StaffInfoDto;
 import es.miw.tfm.invierte.user.api.dto.TokenDto;
+import es.miw.tfm.invierte.user.data.model.Staff;
 import es.miw.tfm.invierte.user.data.model.enums.CompanyRole;
 import es.miw.tfm.invierte.user.service.StaffService;
 import es.miw.tfm.invierte.user.service.util.EmailService;
@@ -83,7 +88,7 @@ public class StaffResourceTest {
     when(this.staffService.getActivationCodeMessage(email, taxIdentificationNumber)).thenReturn(java.util.Optional.of(message));
     doNothing().when(this.emailService).sendEmail(email, subject, message);
 
-    this.staffResource.notify(email, taxIdentificationNumber);
+    this.staffResource.notifyActivationCode(email, taxIdentificationNumber);
 
     verify(this.staffService).getActivationCodeMessage(email, taxIdentificationNumber);
     verify(this.emailService).sendEmail(email, subject, message);
@@ -93,11 +98,13 @@ public class StaffResourceTest {
   void testActivateAccount() {
     String activationCode = "activationCode";
 
-    doNothing().when(this.staffService).activateAccount(activationCode);
+    when(this.staffService.activateAccount(activationCode)).thenReturn(new AccountConfirmationDto(true));
 
-    this.staffResource.activateAccount(activationCode);
+    final var actualResponse = this.staffResource.activateAccount(activationCode);
 
     verify(this.staffService).activateAccount(activationCode);
+    assertNotNull(actualResponse);
+    assertTrue(actualResponse.isPasswordSet());
   }
 
   @Test
@@ -137,6 +144,31 @@ public class StaffResourceTest {
     assertEquals(staffInfoDto.getFirstName(), result.getFirstName());
     assertEquals(staffInfoDto.getFamilyName(), result.getFamilyName());
     verify(this.staffService).readGeneralInfo(email);
+  }
+
+  @Test
+  void testCreateUserWithCompany() {
+    StaffDto staff = buildStaffDto();
+
+    String taxIdentificationNumber = "123456789";
+    doNothing().when(this.staffService).createUserWithCompany(staff.toStaff());
+    this.staffResource.createUserWithCompany(staff, taxIdentificationNumber);
+    verify(staffService, times(1)).createUserWithCompany(staff.toStaff());
+  }
+
+  @Test
+  void testNotifyResetPassword() {
+    String email = "test@example.com";
+    this.staffResource.notifyResetPassword(email);
+    verify(staffService, times(1)).getResetPasswordNotificationCodeMessage(email);
+  }
+
+  @Test
+  void testResetPassword() {
+    String email = "test@example.com";
+    PasswordResetDto passwordResetDto = new PasswordResetDto();
+    staffResource.resetPassword(email, passwordResetDto);
+    verify(staffService, times(1)).resetPassword(email, passwordResetDto);
   }
 
   private static StaffDto buildStaffDto() {

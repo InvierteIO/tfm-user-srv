@@ -18,4 +18,16 @@ class StaffTest {
     assertEquals(CompanyRole.OWNER, staff.getCompanyRole());
     assertNull(staff.getTaxIdentificationNumber());
   }
+
+
+  @Test
+  void testSetNewCompanyUserDefault() {
+    Staff staff = new Staff();
+    staff.setPassword("securePassword123");
+
+    staff.setNewCompanyUserDefault();
+
+    assertEquals(Status.INACTIVE, staff.getStatus());
+    assertNull(staff.getPassword());
+  }
 }

@@ -7,6 +7,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -42,15 +43,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   protected void doFilterInternal(@NonNull HttpServletRequest request,
       @NonNull HttpServletResponse response, @NonNull FilterChain chain)
       throws IOException, ServletException {
+    List<GrantedAuthority> authorities = new ArrayList<>();
+
     String token = this.jwtService.extractToken(request.getHeader(AUTHORIZATION));
     if (!token.isEmpty()) {
-      GrantedAuthority authority =
-          new SimpleGrantedAuthority(CompanyRole.PREFIX + jwtService.role(token));
-      UsernamePasswordAuthenticationToken authentication =
-          new UsernamePasswordAuthenticationToken(jwtService.user(token), token,
-              List.of(authority));
-      SecurityContextHolder.getContext().setAuthentication(authentication);
+      authorities.add(new SimpleGrantedAuthority(CompanyRole.PREFIX + jwtService.role(token)));
     }
+
+    this.jwtService.roles(token)
+        .forEach((companyKey, roleValue) ->
+            authorities.add(
+                new SimpleGrantedAuthority(CompanyRole.PREFIX + companyKey + "_" + roleValue)));
+
+    UsernamePasswordAuthenticationToken authentication =
+        new UsernamePasswordAuthenticationToken(jwtService.user(token), token,authorities);
+    SecurityContextHolder.getContext().setAuthentication(authentication);
+
     chain.doFilter(request, response);
   }
 

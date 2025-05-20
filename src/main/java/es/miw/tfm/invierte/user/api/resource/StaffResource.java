@@ -1,7 +1,9 @@
 package es.miw.tfm.invierte.user.api.resource;
 
 
+import es.miw.tfm.invierte.user.api.dto.AccountConfirmationDto;
 import es.miw.tfm.invierte.user.api.dto.PasswordChangeDto;
+import es.miw.tfm.invierte.user.api.dto.PasswordResetDto;
 import es.miw.tfm.invierte.user.api.dto.StaffCompanyDto;
 import es.miw.tfm.invierte.user.api.dto.StaffDto;
 import es.miw.tfm.invierte.user.api.dto.StaffInfoDto;
@@ -57,11 +59,15 @@ public class StaffResource {
 
   public static final String CHANGE_PASSWORD = "/change-password";
 
+  public static final String RESET_PASSWORD = "/reset-password";
+
   public static final String EMAIL = "/{email}";
 
   public static final String SET_COMPANY = "/set-company";
 
   public static final String NOTIFY_CODE = "/notify-code";
+
+  public static final String NOTIFY_RESET_PASSWORD = "/notify-reset-password";
 
   public static final String ACTIVATE_CODE = "/activate-code/{activationCode}";
 
@@ -100,6 +106,21 @@ public class StaffResource {
   }
 
   /**
+   * Creates a new user without assigning a company.
+   *
+   * @param staffDto the staff data transfer object
+   */
+  @PostMapping(STAFF + COMPANY + TAX_IDENTIFICATION_NUMBER)
+  @PreAuthorize("@securityUtil.hasRoleForCompanyCode('OWNER', #taxIdentificationNumber)")
+  public void createUserWithCompany(@Valid @RequestBody StaffDto staffDto,
+      @PathVariable String taxIdentificationNumber) {
+    this.staffService.createUserWithCompany(staffDto.toStaff());
+    log.info("Staff registered successfully: {} - taxIdentificationNumber: {}",
+        staffDto.getEmail().replace("\n", "").replace("\r", ""),
+        taxIdentificationNumber);
+  }
+
+  /**
    * Assigns a company to an existing user.
    *
    * @param staffCompanyDto the staff company data transfer object
@@ -123,12 +144,32 @@ public class StaffResource {
    */
   @PostMapping(STAFF + EMAIL + COMPANY + TAX_IDENTIFICATION_NUMBER + NOTIFY_CODE)
   @PreAuthorize("permitAll()")
-  public void notify(@PathVariable String email, @PathVariable String taxIdentificationNumber) {
+  public void notifyActivationCode(@PathVariable String email,
+      @PathVariable String taxIdentificationNumber) {
     this.staffService.getActivationCodeMessage(email, taxIdentificationNumber)
         .ifPresent(message -> this.emailService.sendEmail(email, "Unete a InvierteIO", message));
-    log.info("Activation code - notification sent for  email {} - taxIdentificationNumber {}",
+    log.info("Activation code - notification sent for email {} - taxIdentificationNumber {}",
             email.replace("\n", "").replace("\r", ""),
             taxIdentificationNumber.replace("\n", "").replace("\r", ""));
+  }
+
+  /**
+   * Sends a reset password notification to a user.
+   * Retrieves a reset password notification code message for the specified email
+   * and sends it via email.
+   *
+   * @param email the email of the user to send the reset password notification
+   *
+   * @author denilssonmn
+   */
+  @PostMapping(STAFF + EMAIL + NOTIFY_RESET_PASSWORD)
+  @PreAuthorize("permitAll()")
+  public void notifyResetPassword(@PathVariable String email) {
+    this.staffService.getResetPasswordNotificationCodeMessage(email)
+        .ifPresent(message -> this.emailService.sendEmail(email,
+            "Restablece contraseña - InvierteIO", message));
+    log.info("Reset Password code - notification sent for email {}",
+        email.replace("\n", "").replace("\r", ""));
   }
 
   /**
@@ -138,10 +179,10 @@ public class StaffResource {
    */
   @PostMapping(STAFF + ACTIVATE_CODE)
   @PreAuthorize("permitAll()")
-  public void activateAccount(@PathVariable String activationCode) {
-    this.staffService.activateAccount(activationCode);
-    log.info("Activation code {} completed.", activationCode
-            .replace("\n", "").replace("\r", ""));
+  public AccountConfirmationDto activateAccount(@PathVariable String activationCode) {
+    log.info("Activation code {} to be processed.", activationCode
+        .replace("\n", "").replace("\r", ""));
+    return this.staffService.activateAccount(activationCode);
   }
 
   /**
@@ -156,6 +197,15 @@ public class StaffResource {
                              @Valid @RequestBody PasswordChangeDto passwordChangeDto) {
     this.staffService.changePassword(email, passwordChangeDto);
     log.info("Change password  email {}", email.replace("\n", "").replace("\r", ""));
+  }
+
+
+  @PatchMapping(STAFF + EMAIL + RESET_PASSWORD)
+  @PreAuthorize("permitAll()")
+  public void resetPassword(@PathVariable String email,
+      @Valid @RequestBody PasswordResetDto passwordResetDto) {
+    this.staffService.resetPassword(email, passwordResetDto);
+    log.info("Reset password email {}", email.replace("\n", "").replace("\r", ""));
   }
 
   /**

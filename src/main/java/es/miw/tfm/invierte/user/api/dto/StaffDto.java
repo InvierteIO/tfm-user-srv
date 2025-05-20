@@ -7,6 +7,8 @@ import es.miw.tfm.invierte.user.data.model.enums.Gender;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
+import java.util.Objects;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -68,7 +70,9 @@ public class StaffDto {
   public Staff toStaff() {
     Staff staff = new Staff();
     BeanUtils.copyProperties(this, staff);
-    staff.setPassword(new BCryptPasswordEncoder().encode(this.password));
+    if (!Objects.isNull(this.password)) {
+      staff.setPassword(new BCryptPasswordEncoder().encode(this.password));
+    }
     return staff;
   }
 }
