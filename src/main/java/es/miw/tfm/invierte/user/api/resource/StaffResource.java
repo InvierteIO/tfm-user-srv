@@ -118,7 +118,7 @@ public class StaffResource {
     this.staffService.createUserWithCompany(staffDto.toStaff());
     log.info("Staff registered successfully: {} - taxIdentificationNumber: {}",
         staffDto.getEmail().replace("\n", "").replace("\r", ""),
-        LogUtil.sanitize(taxIdentificationNumber));
+        taxIdentificationNumber.replace("\n", "").replace("\r", ""));
   }
 
   /**
