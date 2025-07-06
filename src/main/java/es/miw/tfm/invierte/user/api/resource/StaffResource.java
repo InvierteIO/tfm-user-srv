@@ -8,6 +8,7 @@ import es.miw.tfm.invierte.user.api.dto.StaffCompanyDto;
 import es.miw.tfm.invierte.user.api.dto.StaffDto;
 import es.miw.tfm.invierte.user.api.dto.StaffInfoDto;
 import es.miw.tfm.invierte.user.api.dto.TokenDto;
+import es.miw.tfm.invierte.user.api.util.LogUtil;
 import es.miw.tfm.invierte.user.service.StaffService;
 import es.miw.tfm.invierte.user.service.util.EmailService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -117,7 +118,7 @@ public class StaffResource {
     this.staffService.createUserWithCompany(staffDto.toStaff());
     log.info("Staff registered successfully: {} - taxIdentificationNumber: {}",
         staffDto.getEmail().replace("\n", "").replace("\r", ""),
-        taxIdentificationNumber);
+        LogUtil.sanitize(taxIdentificationNumber));
   }
 
   /**
